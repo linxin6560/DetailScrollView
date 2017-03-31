@@ -28,7 +28,6 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
         TextView textView = (TextView) holder.itemView;
-        System.out.println("textView=" + textView + ",position=" + position + ",list.get(position)=" + list.get(position));
         textView.setText(list.get(position));
     }
 
