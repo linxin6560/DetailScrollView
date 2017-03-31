@@ -30,7 +30,7 @@ public class DetailScrollView extends ViewGroup {
     private VelocityTracker mVelocityTracker;
     private int mTouchSlop;
     private int mMinimumVelocity;
-    private int mWebHeight;
+    private int maxScrollY;
     private boolean mIsBeingDragged;
 
     public DetailScrollView(Context context) {
@@ -77,53 +77,46 @@ public class DetailScrollView extends ViewGroup {
 
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
-        int w = r - l;
-        int h = b - t;
-        mWebHeight = getWebViewHeight(h);
-        int top = 0;
-        for (int i = 0; i < getChildCount(); i++) {
-            View child = getChildAt(i);
-            child.layout(0, top, w, top + h);
-            top += h;
-        }
-    }
+        final int count = getChildCount();
+        final int parentLeft = getPaddingLeft();
+        int lastBottom = getPaddingTop();
+        int parentHeight = b - t;
+        maxScrollY = 0;
 
-    private int getWebViewHeight(int height) {
-        View view = getChildAt(0);
-        if (view != null) {
-            int h = view.getLayoutParams().height;
-            if (h > 0)
-                return h;
+        for (int i = 0; i < count; i++) {
+            final View child = getChildAt(i);
+            if (child.getVisibility() != GONE) {
+                final MarginLayoutParams lp = (MarginLayoutParams) child.getLayoutParams();
+
+                final int width = child.getMeasuredWidth();
+                final int height = child.getMeasuredHeight();
+
+                int childLeft = parentLeft + lp.leftMargin;
+                int childTop = lastBottom + lp.topMargin;
+                child.layout(childLeft, childTop, childLeft + width, childTop + height);
+                lastBottom = childTop + height + lp.bottomMargin;
+                if (!(child instanceof IDetailWebView)) {
+                    maxScrollY += height;//MyScrollView最大的滚动高度为除了WebView之外的其他控件高度总和
+                }
+            }
         }
-        return height;
     }
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        int width = 0;
-        int widthSize = MeasureSpec.getSize(widthMeasureSpec);
-        int widthMode = MeasureSpec.getMode(widthMeasureSpec);
-        int heightSize = MeasureSpec.getSize(heightMeasureSpec);
-        int heightMode = MeasureSpec.getMode(heightMeasureSpec);
-        if (widthMode == 0 || heightMode == 0) {
-            heightSize = 0;
-        } else {
-            widthMode = MeasureSpec.makeMeasureSpec(widthSize, MeasureSpec.EXACTLY);
-            heightMode = MeasureSpec.makeMeasureSpec(heightSize, MeasureSpec.EXACTLY);
-            for (int i = 0; i < getChildCount(); i++) {
-                View child = this.getChildAt(i);
-                child.measure(widthMode, heightMode);
-            }
-            width = widthSize;
+        int count = getChildCount();
+        for (int i = 0; i < count; i++) {
+            final View child = getChildAt(i);
+            measureChildWithMargins(child, widthMeasureSpec, 0, heightMeasureSpec, 0);
         }
-        this.setMeasuredDimension(width, heightSize);
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
     }
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         int action = event.getAction();
         float y = event.getY();
-        boolean isAtTop = getScrollY() == mWebHeight;//MyScroll是否在头部
+        boolean isAtTop = getScrollY() == maxScrollY;//MyScroll是否在头部
         boolean isAtBottom = getScrollY() == 0;//MyScroll是否在底部
         acquireVelocityTracker(event);
         switch (action) {
@@ -164,7 +157,9 @@ public class DetailScrollView extends ViewGroup {
                     } else if (mWebView.canScrollVertically(DIRECT_BOTTOM) && isAtBottom) {//因为WebView可以继续上滑，故让丫的处理fling事件
                         mWebView.startFling(-initialVelocity);
                     } else {//上面两个没有处理fling事件，才轮到MyScrollView去处理
-                        fling(-initialVelocity);
+                        if (isCanScroll()) {//不能滑动，则不触发fling
+                            fling(-initialVelocity);
+                        }
                     }
                 }
                 releaseVelocityTracker();
@@ -176,6 +171,25 @@ public class DetailScrollView extends ViewGroup {
         return true;
     }
 
+    /**
+     * 是否可以滑动，当webView和listView的滑动范围之和大于高度时，才可滑动
+     *
+     * @return true:可滑动
+     */
+    private boolean isCanScroll() {
+        return computeVerticalScrollRange() > getHeight();
+    }
+
+    /**
+     * 列表是否可滑动,列表的滑动范围大于其高度则代表可滑动
+     *
+     * @return true:可滑动
+     */
+    private boolean isListViewCanScroll() {
+        View view = (View) mListView;
+        return mListView.computeVerticalScrollRange() > view.getHeight();
+    }
+
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
         final int childCount = getChildCount();
@@ -185,8 +199,8 @@ public class DetailScrollView extends ViewGroup {
         if (!touchInView((View) mWebView, ev) && !touchInView((View) mListView, ev)) {
             return false;
         }
-        LogE("onInterceptTouchEvent.getScrollY=" + getScrollY() + ",mWebHeight=" + mWebHeight + ",mScroller.isFinished()=" + mScroller.isFinished());
-        boolean isCanScrollBottom = getScrollY() < mWebHeight && mScroller.isFinished();//是否可以向下滑
+        LogE("onInterceptTouchEvent.getScrollY=" + getScrollY() + ",mWebHeight=" + maxScrollY + ",mScroller.isFinished()=" + mScroller.isFinished());
+        boolean isCanScrollBottom = getScrollY() < maxScrollY && mScroller.isFinished();//是否可以向下滑
         boolean isCanScrollTop = getScrollY() > 0 && mScroller.isFinished();//是否可以向上滑
         final int action = ev.getAction();
         acquireVelocityTracker(ev);
@@ -215,7 +229,7 @@ public class DetailScrollView extends ViewGroup {
                                 }
                             }
                         } else if (touchInView((View) mListView, ev)) { // 触摸点在第二个View
-                            LogE("onInterceptTouchEvent.Move.......触摸点在第二个View...isCanScrollBottom1=" + isCanScrollBottom);
+                            LogE("onInterceptTouchEvent.Move.......触摸点在第二个View...isCanScrollBottom=" + isCanScrollBottom);
                             if (isCanScrollBottom) {
                                 mIsBeingDragged = true;
                             }
@@ -276,15 +290,20 @@ public class DetailScrollView extends ViewGroup {
         int dy = 0;
         int distance = Math.abs(delta);
         if (delta > 0) { // Scroll To Bottom
-            View second = getChildAt(1);
-            if (second != null) {
-                int max = second.getTop() - getScrollY(); // 最多滚动到第二个View的顶部和Container顶部对齐
-                max = Math.min(max, second.getBottom() - getScrollY() - getBottom()); // 最多滚动到第二个View的底部和Container对齐
-                dy = Math.min(max, distance);
-            }
+            View listView = (View) mListView;
+            int scrollTop = listView.getTop() - getScrollY(); // 最多滚动到第二个View的顶部和Container顶部对齐
+            int scrollBottom = listView.getBottom() - getScrollY() - getBottom(); // 最多滚动到第二个View的底部和Container对齐
+            int min = Math.min(scrollTop, scrollBottom);
+            dy = Math.min(min, distance);
+            LogE(TAG + ".adjustScrollY...delta>0...dy=" + dy + ",delta=" + delta + ",scrollTop=" + scrollTop + ",scrollBottom=" + scrollBottom);
         } else if (delta < 0) { // Scroll To Top
             dy = -Math.min(distance, getScrollY());
+            LogE(TAG + ".adjustScrollY...delta<0...dy=" + dy + ",delta=" + delta);
         }
+        if (!isCanScroll()) {//不能滑动，则dy=0
+            dy = 0;
+        }
+        LogE(TAG + ".adjustScrollY...finally...dy=" + dy + ",delta=" + delta + ",isCanScroll()=" + isCanScroll());
         return dy;
     }
 
@@ -309,7 +328,7 @@ public class DetailScrollView extends ViewGroup {
         int currY = mScroller.getCurrY();
         int curVelocity = getCappedCurVelocity();
         LogE("computeScroll...oldX=" + oldX + ",oldY=" + oldY + ",currX=" + currX + ",currY=" + currY + ",curVelocity=" + curVelocity);
-        if (currY <= oldY || oldY < mWebHeight) {
+        if (currY <= oldY || oldY < maxScrollY) {
             if (currY < oldY && oldY <= 0) {
                 if (curVelocity != 0) {
                     LogE("webView start fling:" + (-curVelocity));
@@ -318,14 +337,14 @@ public class DetailScrollView extends ViewGroup {
                     return;
                 }
             }
-        } else if (currY > oldY && oldY >= mWebHeight && curVelocity != 0 && mListView.startFling(curVelocity)) {
+        } else if (currY > oldY && oldY >= maxScrollY && curVelocity != 0 && mListView.startFling(curVelocity)) {
             LogE("listView start fling:" + (-curVelocity));
             mScroller.forceFinished(true);
             return;
         }
-        int dy = Math.max(0, Math.min(currY, mWebHeight));
+        int toY = Math.max(0, Math.min(currY, maxScrollY));
         if (oldX != currX || oldY != currY) {
-            scrollTo(currX, dy);
+            scrollTo(currX, toY);
         }
         if (!awakenScrollBars()) {
             ViewCompat.postInvalidateOnAnimation(this);
@@ -342,11 +361,11 @@ public class DetailScrollView extends ViewGroup {
 
     @Override
     public boolean canScrollVertically(int direction) {
-        LogE(TAG + ".canScrollVertically.getScrollY()=" + getScrollY() + ",mWebHeight=" + mWebHeight + ",direction=" + direction);
+        LogE(TAG + ".canScrollVertically.getScrollY()=" + getScrollY() + ",mWebHeight=" + maxScrollY + ",direction=" + direction);
         if (direction > 0) {
             return getScrollY() > 0;
         } else {
-            return getScrollY() < mWebHeight;
+            return getScrollY() < maxScrollY;
         }
     }
 
@@ -371,6 +390,11 @@ public class DetailScrollView extends ViewGroup {
             mVelocityTracker.recycle();
             mVelocityTracker = null;
         }
+    }
+
+    @Override
+    public LayoutParams generateLayoutParams(AttributeSet attrs) {
+        return new MarginLayoutParams(getContext(), attrs);
     }
 
     public static void LogE(String content) {

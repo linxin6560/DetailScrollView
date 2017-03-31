@@ -34,6 +34,7 @@ public class ListViewHelper {
         switch (ev.getAction()) {
             case MotionEvent.ACTION_DOWN:
                 mLastY = ev.getRawY();
+                DetailScrollView.LogE("ListViewHelper.onTouchEvent.ACTION_MOVE.......mLastY=" + mLastY);
                 break;
             case MotionEvent.ACTION_MOVE:
                 float nowY = ev.getRawY();
@@ -42,6 +43,8 @@ public class ListViewHelper {
                 mLastY = nowY;
                 DetailScrollView.LogE("ListViewHelper.onTouchEvent.ACTION_MOVE,.......dy=" + dy + "\n"
                         + ",deltaY=" + deltaY + "\n"
+                        + ",nowY=" + nowY + "\n"
+                        + ",mLastY=" + mLastY + "\n"
                         + ",ListView.canScrollVertically=" + canScrollVertically(DetailScrollView.DIRECT_TOP) + "\n"
                         + ",mScrollView.canScrollVertically=" + mScrollView.canScrollVertically(DetailScrollView.DIRECT_TOP) + "\n"
                         + ",mScrollView.getScrollY=" + mScrollView.getScrollY());

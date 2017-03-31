@@ -4,6 +4,8 @@ import android.content.Context;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 
 import com.levylin.detailscrollview.views.helper.WebViewHelper;
 import com.tencent.smtt.sdk.WebView;
