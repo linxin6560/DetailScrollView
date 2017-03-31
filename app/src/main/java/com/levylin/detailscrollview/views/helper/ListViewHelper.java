@@ -40,8 +40,13 @@ public class ListViewHelper {
                 float deltaY = nowY - mLastY;
                 int dy = mScrollView.adjustScrollY((int) -deltaY);
                 mLastY = nowY;
-                DetailScrollView.LogE("MyListViewV9.onTouchEvent.ACTION_MOVE,.......dy=" + dy + ",deltaY=" + deltaY + ",canScrollVertically=" + canScrollVertically(DetailScrollView.DIRECT_TOP));
-                if (!canScrollVertically(DetailScrollView.DIRECT_TOP) && dy != 0) {
+                DetailScrollView.LogE("ListViewHelper.onTouchEvent.ACTION_MOVE,.......dy=" + dy + "\n"
+                        + ",deltaY=" + deltaY + "\n"
+                        + ",ListView.canScrollVertically=" + canScrollVertically(DetailScrollView.DIRECT_TOP) + "\n"
+                        + ",mScrollView.canScrollVertically=" + mScrollView.canScrollVertically(DetailScrollView.DIRECT_TOP) + "\n"
+                        + ",mScrollView.getScrollY=" + mScrollView.getScrollY());
+                if ((!canScrollVertically(DetailScrollView.DIRECT_TOP) && dy < 0)//向下滑，当列表不能滚动时，滑动DetailScrollView
+                        || (mScrollView.canScrollVertically(DetailScrollView.DIRECT_TOP) && dy > 0)) {//向上滑，当DetailScrollView能继续上滑时，DetailScrollView上滑
                     mScrollView.customScrollBy(dy);
                     isDragged = true;
                     return false;

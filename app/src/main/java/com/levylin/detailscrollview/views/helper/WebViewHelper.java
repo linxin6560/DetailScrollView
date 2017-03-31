@@ -72,10 +72,16 @@ public class WebViewHelper {
                 break;
             case MotionEvent.ACTION_MOVE:
                 float nowY = ev.getRawY();
-                float distance = nowY - mLastY;
-                int dy = mScrollView.adjustScrollY((int) -distance);
+                float deltaY = nowY - mLastY;
+                int dy = mScrollView.adjustScrollY((int) -deltaY);
                 mLastY = nowY;
-                if (!canScrollVertically(DetailScrollView.DIRECT_BOTTOM) && dy != 0) {
+                DetailScrollView.LogE("WebViewHelper.onTouchEvent.ACTION_MOVE,.......dy=" + dy + "\n"
+                        + ",deltaY=" + deltaY + "\n"
+                        + ",WebView.canScrollVertically=" + canScrollVertically(DetailScrollView.DIRECT_BOTTOM) + "\n"
+                        + ",mScrollView.canScrollVertically=" + mScrollView.canScrollVertically(DetailScrollView.DIRECT_BOTTOM) + "\n"
+                        + ",mScrollView.getScrollY=" + mScrollView.getScrollY());
+                if ((!canScrollVertically(DetailScrollView.DIRECT_BOTTOM) && dy > 0)
+                        || (mScrollView.canScrollVertically(DetailScrollView.DIRECT_BOTTOM) && dy < 0)) {
                     mScrollView.customScrollBy(dy);
                     isDragged = true;
                     return false;

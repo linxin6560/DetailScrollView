@@ -340,6 +340,16 @@ public class DetailScrollView extends ViewGroup {
         return webScrollRange + listScrollRange;
     }
 
+    @Override
+    public boolean canScrollVertically(int direction) {
+        LogE(TAG + ".canScrollVertically.getScrollY()=" + getScrollY() + ",mWebHeight=" + mWebHeight + ",direction=" + direction);
+        if (direction > 0) {
+            return getScrollY() > 0;
+        } else {
+            return getScrollY() < mWebHeight;
+        }
+    }
+
     private int getCappedCurVelocity() {
         return (int) this.mScroller.getCurrVelocity();
     }
