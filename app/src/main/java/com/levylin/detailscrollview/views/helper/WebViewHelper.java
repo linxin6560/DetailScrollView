@@ -1,52 +1,69 @@
-package com.example.administrator.detailscrollview;
+package com.levylin.detailscrollview.views.helper;
 
 import android.content.Context;
 import android.os.SystemClock;
-import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.VelocityTracker;
 import android.view.ViewConfiguration;
-import android.webkit.WebView;
+
+import com.levylin.detailscrollview.views.DetailScrollView;
+import com.levylin.detailscrollview.views.DetailWebView;
+import com.levylin.detailscrollview.views.DetailX5WebView;
 
 import java.util.LinkedList;
 
-public class DetailWebView extends WebView {
+/**
+ * Created by LinXin on 2017/3/31.
+ */
+public class WebViewHelper {
 
     private DetailScrollView mScrollView;
+    private DetailWebView mWebView;
+    private DetailX5WebView mX5WebView;
+    private LinkedList<SpeedItem> speedItems;
     private float mLastY;
     private VelocityTracker mVelocityTracker;
     private float mMaxVelocity;
     private boolean isDragged = false;
-    private LinkedList<SpeedItem> speedItems;
 
-    public DetailWebView(Context context) {
-        super(context);
-        init();
+    public WebViewHelper(DetailScrollView scrollView, DetailWebView webView) {
+        this.mScrollView = scrollView;
+        this.mWebView = webView;
+        init(mScrollView.getContext());
     }
 
-    public DetailWebView(Context context, AttributeSet attributeSet) {
-        super(context, attributeSet);
-        init();
+    public WebViewHelper(DetailScrollView scrollView, DetailX5WebView x5WebView) {
+        this.mScrollView = scrollView;
+        this.mX5WebView = x5WebView;
+        init(mScrollView.getContext());
     }
 
-    public DetailWebView(Context context, AttributeSet attributeSet, int i) {
-        super(context, attributeSet, i);
-        init();
-    }
-
-    protected void init() {
+    private void init(Context context) {
         speedItems = new LinkedList<>();
-        setVerticalScrollBarEnabled(false);
-        setOverScrollMode(OVER_SCROLL_NEVER);
-        final ViewConfiguration configuration = ViewConfiguration.get(getContext());
+        final ViewConfiguration configuration = ViewConfiguration.get(context);
         mMaxVelocity = configuration.getScaledMaximumFlingVelocity();
     }
 
-    public void setScrollView(DetailScrollView scrollView) {
-        this.mScrollView = scrollView;
+    public void overScrollBy(int deltaX, int deltaY, int scrollX, int scrollY, int scrollRangeX, int scrollRangeY, int maxOverScrollX, int maxOverScrollY, boolean isTouchEvent) {
+        if (speedItems.size() >= 10) {
+            speedItems.removeFirst();
+        }
+        if (deltaY + scrollY < scrollRangeY) {
+            speedItems.add(new SpeedItem(deltaY, SystemClock.uptimeMillis()));
+        } else if (!speedItems.isEmpty()) {
+            int totalDeltaY = 0;
+            for (SpeedItem speedItem : speedItems) {
+                totalDeltaY += speedItem.deltaY;
+            }
+            int speed = ((int) (speedItems.getLast().time - speedItems.getFirst().time));
+            speedItems.clear();
+            if (speed > 0 && totalDeltaY != 0) {
+                speed = totalDeltaY / speed * 1000;
+                mScrollView.fling(speed);
+            }
+        }
     }
 
-    @Override
     public boolean onTouchEvent(MotionEvent ev) {
         acquireVelocityTracker(ev);
         switch (ev.getAction()) {
@@ -70,14 +87,21 @@ public class DetailWebView extends WebView {
                     final float curVelocity = mVelocityTracker.getYVelocity(0);
                     mScrollView.fling(-(int) curVelocity);
                 }
-                speedItems.clear();
                 mLastY = 0;
                 isDragged = false;
                 releaseVelocityTracker();
                 break;
         }
-        return super.onTouchEvent(ev);
+        return true;
     }
+
+    private boolean canScrollVertically(int direct) {
+        if (mWebView != null) {
+            return mWebView.canScrollVertically(direct);
+        }
+        return mX5WebView.canScrollVertically(direct);
+    }
+
 
     private void acquireVelocityTracker(MotionEvent ev) {
         if (mVelocityTracker == null) {
@@ -91,33 +115,6 @@ public class DetailWebView extends WebView {
             return;
         mVelocityTracker.recycle();
         mVelocityTracker = null;
-    }
-
-    @Override
-    protected boolean overScrollBy(int deltaX, int deltaY, int scrollX, int scrollY, int scrollRangeX, int scrollRangeY, int maxOverScrollX, int maxOverScrollY, boolean isTouchEvent) {
-        if (speedItems.size() >= 10) {
-            speedItems.removeFirst();
-        }
-        if (deltaY + scrollY < scrollRangeY) {
-            speedItems.add(new SpeedItem(deltaY, SystemClock.uptimeMillis()));
-        } else if (!speedItems.isEmpty()) {
-            int totalDeltaY = 0;
-            for (SpeedItem speedItem : speedItems) {
-                totalDeltaY += speedItem.deltaY;
-            }
-            int speed = ((int) (speedItems.getLast().time - speedItems.getFirst().time));
-            speedItems.clear();
-            if (speed > 0 && totalDeltaY != 0) {
-                speed = totalDeltaY / speed * 1000;
-                mScrollView.fling(speed);
-            }
-        }
-        return super.overScrollBy(deltaX, deltaY, scrollX, scrollY, scrollRangeX, scrollRangeY, maxOverScrollX, maxOverScrollY, isTouchEvent);
-    }
-
-    @Override
-    public int computeVerticalScrollRange() {
-        return super.computeVerticalScrollRange();
     }
 
     private class SpeedItem {
@@ -138,4 +135,3 @@ public class DetailWebView extends WebView {
         }
     }
 }
-

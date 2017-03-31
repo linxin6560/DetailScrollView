@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.administrator.detailscrollview">
+    package="com.levylin.detailscrollview">
 
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="com.android.launcher.permission.INSTALL_SHORTCUT" />
@@ -22,13 +22,26 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".MainActivity">
+        <activity android:name="com.levylin.detailscrollview.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".WebViewListViewActivity"
+            android:label="WebViewListView" />
+        <activity
+            android:name=".WebViewRecyclerViewActivity"
+            android:label="WebViewRecyclerView" />
+        <activity
+            android:name=".X5WebViewListViewActivity"
+            android:label="X5WebViewListView" />
+        <activity
+            android:name=".X5WebViewRecyclerViewActivity"
+            android:label="X5WebViewRecyclerView" />
     </application>
 
 </manifest>

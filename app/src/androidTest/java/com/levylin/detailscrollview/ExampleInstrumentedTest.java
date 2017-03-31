@@ -1,4 +1,4 @@
-package com.example.administrator.detailscrollview;
+package com.levylin.detailscrollview;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;

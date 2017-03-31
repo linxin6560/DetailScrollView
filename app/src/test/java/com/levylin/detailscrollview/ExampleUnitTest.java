@@ -1,4 +1,4 @@
-package com.example.administrator.detailscrollview;
+package com.levylin.detailscrollview;
 
 import org.junit.Test;
 

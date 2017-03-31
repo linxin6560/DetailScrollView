@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <Button
+        android:id="@+id/webview_listview_btn"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="WebView+ListView" />
+
+    <Button
+        android:id="@+id/webview_recyclerview_btn"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="WebView+RecyclerView" />
+
+    <Button
+        android:id="@+id/x5webview_listview_btn"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="X5WebView+ListView" />
+
+    <Button
+        android:id="@+id/x5webview_recyclerview_btn"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="X5WebView+RecyclerView" />
+</LinearLayout>
