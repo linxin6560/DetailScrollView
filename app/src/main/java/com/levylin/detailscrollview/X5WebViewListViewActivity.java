@@ -25,7 +25,7 @@ public class X5WebViewListViewActivity extends AppCompatActivity {
         setContentView(R.layout.act_x5webview_listview);
         ListView listView = (ListView) findViewById(R.id.test_lv);
         List<String> list = new ArrayList<>();
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < 20; i++) {
             list.add("测试:" + i);
         }
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_expandable_list_item_1, list);

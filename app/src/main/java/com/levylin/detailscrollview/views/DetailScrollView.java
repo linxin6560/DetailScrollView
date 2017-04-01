@@ -80,7 +80,6 @@ public class DetailScrollView extends ViewGroup {
         final int count = getChildCount();
         final int parentLeft = getPaddingLeft();
         int lastBottom = getPaddingTop();
-        int parentHeight = b - t;
         maxScrollY = 0;
 
         for (int i = 0; i < count; i++) {
@@ -95,6 +94,8 @@ public class DetailScrollView extends ViewGroup {
                 int childTop = lastBottom + lp.topMargin;
                 child.layout(childLeft, childTop, childLeft + width, childTop + height);
                 lastBottom = childTop + height + lp.bottomMargin;
+                maxScrollY += lp.topMargin;
+                maxScrollY += lp.bottomMargin;
                 if (!(child instanceof IDetailWebView)) {
                     maxScrollY += height;//MyScrollView最大的滚动高度为除了WebView之外的其他控件高度总和
                 }
