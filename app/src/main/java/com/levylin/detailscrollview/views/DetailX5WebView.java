@@ -4,10 +4,8 @@ import android.content.Context;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
-import android.view.ViewTreeObserver;
 
-import com.levylin.detailscrollview.views.helper.WebViewHelper;
+import com.levylin.detailscrollview.views.helper.WebViewTouchHelper;
 import com.tencent.smtt.sdk.WebView;
 import com.tencent.smtt.sdk.WebViewCallbackClient;
 
@@ -17,7 +15,7 @@ import com.tencent.smtt.sdk.WebViewCallbackClient;
  */
 public class DetailX5WebView extends WebView implements IDetailWebView {
 
-    private WebViewHelper mHelper;
+    private WebViewTouchHelper mHelper;
 
     public DetailX5WebView(Context context) {
         super(context);
@@ -85,7 +83,7 @@ public class DetailX5WebView extends WebView implements IDetailWebView {
 
     @Override
     public void setScrollView(DetailScrollView scrollView) {
-        mHelper = new WebViewHelper(scrollView, this);
+        mHelper = new WebViewTouchHelper(scrollView, this);
     }
 
     @Override

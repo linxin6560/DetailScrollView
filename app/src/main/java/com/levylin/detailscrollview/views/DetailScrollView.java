@@ -116,7 +116,7 @@ public class DetailScrollView extends ViewGroup {
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         int action = event.getAction();
-        float y = event.getY();
+        float y = event.getRawY();
         boolean isAtTop = getScrollY() == maxScrollY;//MyScroll是否在头部
         boolean isAtBottom = getScrollY() == 0;//MyScroll是否在底部
         acquireVelocityTracker(event);
@@ -126,11 +126,12 @@ public class DetailScrollView extends ViewGroup {
                     mScroller.abortAnimation();
                 }
                 mLastY = y;
+                LogE(TAG + ".onTouchEvent.DOWN.......mLastY=" + mLastY);
                 break;
             case MotionEvent.ACTION_MOVE:
                 float delta = y - mLastY;
                 int dy = adjustScrollY((int) -delta);
-                LogE(TAG + ".onTouchEvent.Move.......dy=" + dy + ",delta=" + delta);
+                LogE(TAG + ".onTouchEvent.Move.......dy=" + dy + ",delta=" + delta + ",y=" + y + ",mLastY=" + mLastY);
                 if (dy != 0) {
                     if (mListView.canScrollVertically(DIRECT_TOP) && isAtTop) {//因为ListView上滑操作导致ListView可以继续下滑，故要先ListView滑到顶部，再滑动MyScrollView
                         mListView.customScrollBy((int) -delta);
@@ -292,11 +293,15 @@ public class DetailScrollView extends ViewGroup {
         int distance = Math.abs(delta);
         if (delta > 0) { // Scroll To Bottom
             View listView = (View) mListView;
-            int scrollTop = listView.getTop() - getScrollY(); // 最多滚动到第二个View的顶部和Container顶部对齐
-            int scrollBottom = listView.getBottom() - getScrollY() - getBottom(); // 最多滚动到第二个View的底部和Container对齐
-            int min = Math.min(scrollTop, scrollBottom);
-            dy = Math.min(min, distance);
-            LogE(TAG + ".adjustScrollY...delta>0...dy=" + dy + ",delta=" + delta + ",scrollTop=" + scrollTop + ",scrollBottom=" + scrollBottom);
+            if (listView.getVisibility() == VISIBLE) {
+                int scrollTop = listView.getTop() - getScrollY(); // 最多滚动到第二个View的顶部和Container顶部对齐
+                int scrollBottom = listView.getBottom() - getScrollY() - getBottom(); // 最多滚动到第二个View的底部和Container对齐
+                int min = Math.min(scrollTop, scrollBottom);
+                dy = Math.min(min, distance);
+                LogE(TAG + ".adjustScrollY...delta>0...dy=" + dy + ",delta=" + delta + ",scrollTop=" + scrollTop + ",scrollBottom=" + scrollBottom);
+            } else {
+                dy = 0;
+            }
         } else if (delta < 0) { // Scroll To Top
             dy = -Math.min(distance, getScrollY());
             LogE(TAG + ".adjustScrollY...delta<0...dy=" + dy + ",delta=" + delta);

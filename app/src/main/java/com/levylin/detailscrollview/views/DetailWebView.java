@@ -5,11 +5,11 @@ import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.webkit.WebView;
 
-import com.levylin.detailscrollview.views.helper.WebViewHelper;
+import com.levylin.detailscrollview.views.helper.WebViewTouchHelper;
 
 public class DetailWebView extends WebView implements IDetailWebView {
 
-    private WebViewHelper mHelper;
+    private WebViewTouchHelper mHelper;
 
     public DetailWebView(Context context) {
         super(context);
@@ -32,7 +32,7 @@ public class DetailWebView extends WebView implements IDetailWebView {
     }
 
     public void setScrollView(DetailScrollView scrollView) {
-        mHelper = new WebViewHelper(scrollView, this);
+        mHelper = new WebViewTouchHelper(scrollView, this);
     }
 
     @Override

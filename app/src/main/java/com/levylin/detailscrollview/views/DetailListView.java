@@ -9,7 +9,7 @@ import android.view.ViewConfiguration;
 import android.widget.AbsListView;
 import android.widget.ListView;
 
-import com.levylin.detailscrollview.views.helper.ListViewHelper;
+import com.levylin.detailscrollview.views.helper.ListViewTouchHelper;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -22,7 +22,7 @@ public class DetailListView extends ListView implements IDetailListView {
     private Method reportScrollStateChangeMethod;
     private Method startMethod;
     private Object mFlingRunnable;
-    private ListViewHelper mHelper;
+    private ListViewTouchHelper mHelper;
 
     public DetailListView(Context context) {
         super(context);
@@ -62,7 +62,10 @@ public class DetailListView extends ListView implements IDetailListView {
         }
     }
 
+    @Override
     public boolean startFling(int vy) {
+        if (getVisibility() == GONE)
+            return false;
         if (VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             fling(vy);
             return true;
@@ -78,8 +81,9 @@ public class DetailListView extends ListView implements IDetailListView {
         return false;
     }
 
+    @Override
     public void setScrollView(DetailScrollView scrollView) {
-        mHelper = new ListViewHelper(scrollView, this);
+        mHelper = new ListViewTouchHelper(scrollView, this);
     }
 
     @Override

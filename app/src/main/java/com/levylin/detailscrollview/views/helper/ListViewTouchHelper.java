@@ -1,7 +1,9 @@
 package com.levylin.detailscrollview.views.helper;
 
+import android.content.Context;
 import android.view.MotionEvent;
 import android.view.VelocityTracker;
+import android.view.ViewConfiguration;
 
 import com.levylin.detailscrollview.views.DetailListView;
 import com.levylin.detailscrollview.views.DetailRecyclerView;
@@ -10,7 +12,7 @@ import com.levylin.detailscrollview.views.DetailScrollView;
 /**
  * Created by LinXin on 2017/3/31.
  */
-public class ListViewHelper {
+public class ListViewTouchHelper {
 
     private DetailScrollView mScrollView;
     private float mLastY;
@@ -18,15 +20,23 @@ public class ListViewHelper {
     private boolean isDragged = false;
     private DetailListView mListView;
     private DetailRecyclerView mRecyclerView;
+    private int maxVelocity;
 
-    public ListViewHelper(DetailScrollView scrollView, DetailListView listView) {
+    public ListViewTouchHelper(DetailScrollView scrollView, DetailListView listView) {
         this.mScrollView = scrollView;
         this.mListView = listView;
+        init(scrollView.getContext());
     }
 
-    public ListViewHelper(DetailScrollView scrollView, DetailRecyclerView recyclerView) {
+    public ListViewTouchHelper(DetailScrollView scrollView, DetailRecyclerView recyclerView) {
         this.mScrollView = scrollView;
         this.mRecyclerView = recyclerView;
+        init(scrollView.getContext());
+    }
+
+    private void init(Context context) {
+        ViewConfiguration configuration = ViewConfiguration.get(context);
+        maxVelocity = configuration.getScaledMaximumFlingVelocity();
     }
 
     public boolean onTouchEvent(MotionEvent ev) {
@@ -34,14 +44,14 @@ public class ListViewHelper {
         switch (ev.getAction()) {
             case MotionEvent.ACTION_DOWN:
                 mLastY = ev.getRawY();
-                DetailScrollView.LogE("ListViewHelper.onTouchEvent.ACTION_MOVE.......mLastY=" + mLastY);
+                DetailScrollView.LogE("ListViewTouchHelper.onTouchEvent.ACTION_MOVE.......mLastY=" + mLastY);
                 break;
             case MotionEvent.ACTION_MOVE:
                 float nowY = ev.getRawY();
                 float deltaY = nowY - mLastY;
                 int dy = mScrollView.adjustScrollY((int) -deltaY);
                 mLastY = nowY;
-                DetailScrollView.LogE("ListViewHelper.onTouchEvent.ACTION_MOVE,.......dy=" + dy + "\n"
+                DetailScrollView.LogE("ListViewTouchHelper.onTouchEvent.ACTION_MOVE,.......dy=" + dy + "\n"
                         + ",deltaY=" + deltaY + "\n"
                         + ",nowY=" + nowY + "\n"
                         + ",mLastY=" + mLastY + "\n"
@@ -57,7 +67,7 @@ public class ListViewHelper {
                 break;
             case MotionEvent.ACTION_UP:
                 if (!canScrollVertically(DetailScrollView.DIRECT_TOP) && isDragged) {
-                    mVelocityTracker.computeCurrentVelocity(1000);
+                    mVelocityTracker.computeCurrentVelocity(1000, maxVelocity);
                     final float curVelocity = mVelocityTracker.getYVelocity(0);
                     mScrollView.fling(-(int) curVelocity);
                 }

@@ -27,6 +27,14 @@
             android:id="@+id/test_lv"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@android:color/holo_green_dark" />
+            android:background="@android:color/holo_green_dark"
+            android:visibility="gone" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="500dp"
+            android:background="@android:color/holo_blue_dark"
+            android:gravity="center"
+            android:text="空页面" />
     </com.levylin.detailscrollview.views.DetailScrollView>
 </LinearLayout>

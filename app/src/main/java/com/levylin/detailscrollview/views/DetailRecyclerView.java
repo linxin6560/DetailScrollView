@@ -6,14 +6,14 @@ import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 
-import com.levylin.detailscrollview.views.helper.ListViewHelper;
+import com.levylin.detailscrollview.views.helper.ListViewTouchHelper;
 
 /**
  * Created by LinXin on 2017/3/31.
  */
 public class DetailRecyclerView extends RecyclerView implements IDetailListView {
 
-    private ListViewHelper mHelper;
+    private ListViewTouchHelper mHelper;
 
     public DetailRecyclerView(Context context) {
         super(context);
@@ -29,7 +29,7 @@ public class DetailRecyclerView extends RecyclerView implements IDetailListView 
 
     @Override
     public void setScrollView(DetailScrollView scrollView) {
-        mHelper = new ListViewHelper(scrollView, this);
+        mHelper = new ListViewTouchHelper(scrollView, this);
     }
 
     @Override
@@ -44,6 +44,8 @@ public class DetailRecyclerView extends RecyclerView implements IDetailListView 
 
     @Override
     public boolean startFling(int vy) {
+        if (getVisibility() == GONE)
+            return false;
         return fling(0, vy);
     }
 }

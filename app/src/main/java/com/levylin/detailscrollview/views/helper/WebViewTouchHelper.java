@@ -15,7 +15,7 @@ import java.util.LinkedList;
 /**
  * Created by LinXin on 2017/3/31.
  */
-public class WebViewHelper {
+public class WebViewTouchHelper {
 
     private DetailScrollView mScrollView;
     private DetailWebView mWebView;
@@ -26,13 +26,13 @@ public class WebViewHelper {
     private float mMaxVelocity;
     private boolean isDragged = false;
 
-    public WebViewHelper(DetailScrollView scrollView, DetailWebView webView) {
+    public WebViewTouchHelper(DetailScrollView scrollView, DetailWebView webView) {
         this.mScrollView = scrollView;
         this.mWebView = webView;
         init(mScrollView.getContext());
     }
 
-    public WebViewHelper(DetailScrollView scrollView, DetailX5WebView x5WebView) {
+    public WebViewTouchHelper(DetailScrollView scrollView, DetailX5WebView x5WebView) {
         this.mScrollView = scrollView;
         this.mX5WebView = x5WebView;
         init(mScrollView.getContext());
@@ -75,7 +75,7 @@ public class WebViewHelper {
                 float deltaY = nowY - mLastY;
                 int dy = mScrollView.adjustScrollY((int) -deltaY);
                 mLastY = nowY;
-                DetailScrollView.LogE("WebViewHelper.onTouchEvent.ACTION_MOVE,.......dy=" + dy + "\n"
+                DetailScrollView.LogE("WebViewTouchHelper.onTouchEvent.ACTION_MOVE,.......dy=" + dy + "\n"
                         + ",deltaY=" + deltaY + "\n"
                         + ",WebView.canScrollVertically=" + canScrollVertically(DetailScrollView.DIRECT_BOTTOM) + "\n"
                         + ",mScrollView.canScrollVertically=" + mScrollView.canScrollVertically(DetailScrollView.DIRECT_BOTTOM) + "\n"
