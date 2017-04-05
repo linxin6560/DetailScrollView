@@ -356,7 +356,6 @@ public class DetailScrollView extends ViewGroup {
             return;
         }
         int toY = Math.max(0, Math.min(currY, maxScrollY));
-        LogE("scrollTo....oldX=" + oldX + ",currX=" + currX + ",oldY=" + oldY + ",currY=" + currY + ",toY=" + toY);
         if (oldX != currX || oldY != currY) {
             scrollTo(currX, toY);
         }
