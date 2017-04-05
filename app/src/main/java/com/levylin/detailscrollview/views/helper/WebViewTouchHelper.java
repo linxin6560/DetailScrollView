@@ -44,6 +44,19 @@ public class WebViewTouchHelper {
         mMaxVelocity = configuration.getScaledMaximumFlingVelocity();
     }
 
+    /**
+     * 计算webView的滑动速度
+     *
+     * @param deltaX
+     * @param deltaY
+     * @param scrollX
+     * @param scrollY
+     * @param scrollRangeX
+     * @param scrollRangeY
+     * @param maxOverScrollX
+     * @param maxOverScrollY
+     * @param isTouchEvent
+     */
     public void overScrollBy(int deltaX, int deltaY, int scrollX, int scrollY, int scrollRangeX, int scrollRangeY, int maxOverScrollX, int maxOverScrollY, boolean isTouchEvent) {
         if (speedItems.size() >= 10) {
             speedItems.removeFirst();

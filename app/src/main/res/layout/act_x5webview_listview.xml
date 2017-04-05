@@ -14,27 +14,10 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="100dp"
-            android:layout_marginBottom="20dp"
-            android:layout_marginTop="10dp"
-            android:background="@android:color/holo_blue_light"
-            android:gravity="center"
-            android:text="我就是个测试" />
-
         <com.levylin.detailscrollview.views.DetailListView
             android:id="@+id/test_lv"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@android:color/holo_green_dark"
-            android:visibility="gone" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="500dp"
-            android:background="@android:color/holo_blue_dark"
-            android:gravity="center"
-            android:text="空页面" />
+            android:background="@android:color/holo_green_dark" />
     </com.levylin.detailscrollview.views.DetailScrollView>
 </LinearLayout>

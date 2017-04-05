@@ -10,6 +10,7 @@ import android.widget.AbsListView;
 import android.widget.ListView;
 
 import com.levylin.detailscrollview.views.helper.ListViewTouchHelper;
+import com.levylin.detailscrollview.views.listener.OnScrollBarShowListener;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -17,12 +18,13 @@ import java.lang.reflect.Method;
 /**
  * Created by LinXin on 2017/3/23.
  */
-public class DetailListView extends ListView implements IDetailListView {
+public class DetailListView extends ListView implements IDetailListView, AbsListView.OnScrollListener {
 
     private Method reportScrollStateChangeMethod;
     private Method startMethod;
     private Object mFlingRunnable;
     private ListViewTouchHelper mHelper;
+    private OnScrollBarShowListener mScrollBarShowListener;
 
     public DetailListView(Context context) {
         super(context);
@@ -40,6 +42,7 @@ public class DetailListView extends ListView implements IDetailListView {
     }
 
     protected void init() {
+        setOnScrollListener(this);
         setVerticalScrollBarEnabled(false);
         setOverScrollMode(OVER_SCROLL_NEVER);
         if (VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
@@ -54,7 +57,6 @@ public class DetailListView extends ListView implements IDetailListView {
                 reportScrollStateChangeMethod = AbsListView.class.getDeclaredMethod("reportScrollStateChange", Integer.TYPE);
                 reportScrollStateChangeMethod.setAccessible(true);
             } catch (Throwable v0) {
-                v0.printStackTrace();
                 mFlingRunnable = null;
                 startMethod = null;
                 reportScrollStateChangeMethod = null;
@@ -82,6 +84,11 @@ public class DetailListView extends ListView implements IDetailListView {
     }
 
     @Override
+    public void setOnScrollBarShowListener(OnScrollBarShowListener listener) {
+        mScrollBarShowListener = listener;
+    }
+
+    @Override
     public void setScrollView(DetailScrollView scrollView) {
         mHelper = new ListViewTouchHelper(scrollView, this);
     }
@@ -97,7 +104,14 @@ public class DetailListView extends ListView implements IDetailListView {
     }
 
     @Override
-    public int computeVerticalScrollRange() {
-        return super.computeVerticalScrollRange();
+    public void onScrollStateChanged(AbsListView view, int scrollState) {
+
+    }
+
+    @Override
+    public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
+        if (mScrollBarShowListener != null) {
+            mScrollBarShowListener.onShow();
+        }
     }
 }

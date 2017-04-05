@@ -7,6 +7,7 @@ import android.util.AttributeSet;
 import android.view.MotionEvent;
 
 import com.levylin.detailscrollview.views.helper.ListViewTouchHelper;
+import com.levylin.detailscrollview.views.listener.OnScrollBarShowListener;
 
 /**
  * Created by LinXin on 2017/3/31.
@@ -14,6 +15,7 @@ import com.levylin.detailscrollview.views.helper.ListViewTouchHelper;
 public class DetailRecyclerView extends RecyclerView implements IDetailListView {
 
     private ListViewTouchHelper mHelper;
+    private OnScrollBarShowListener mScrollBarShowListener;
 
     public DetailRecyclerView(Context context) {
         super(context);
@@ -47,5 +49,17 @@ public class DetailRecyclerView extends RecyclerView implements IDetailListView 
         if (getVisibility() == GONE)
             return false;
         return fling(0, vy);
+    }
+
+    @Override
+    public void setOnScrollBarShowListener(OnScrollBarShowListener listener) {
+        mScrollBarShowListener = listener;
+    }
+
+    @Override
+    public void onScrolled(int dx, int dy) {
+        if (mScrollBarShowListener != null) {
+            mScrollBarShowListener.onShow();
+        }
     }
 }

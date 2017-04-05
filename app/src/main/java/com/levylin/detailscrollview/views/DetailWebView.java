@@ -6,10 +6,12 @@ import android.view.MotionEvent;
 import android.webkit.WebView;
 
 import com.levylin.detailscrollview.views.helper.WebViewTouchHelper;
+import com.levylin.detailscrollview.views.listener.OnScrollBarShowListener;
 
 public class DetailWebView extends WebView implements IDetailWebView {
 
     private WebViewTouchHelper mHelper;
+    private OnScrollBarShowListener mScrollBarShowListener;
 
     public DetailWebView(Context context) {
         super(context);
@@ -56,16 +58,19 @@ public class DetailWebView extends WebView implements IDetailWebView {
     }
 
     @Override
+    public void setOnScrollBarShowListener(OnScrollBarShowListener listener) {
+        mScrollBarShowListener = listener;
+    }
+
+    @Override
     protected boolean overScrollBy(int deltaX, int deltaY, int scrollX, int scrollY, int scrollRangeX, int scrollRangeY, int maxOverScrollX, int maxOverScrollY, boolean isTouchEvent) {
+        if (mScrollBarShowListener != null) {
+            mScrollBarShowListener.onShow();
+        }
         if (mHelper != null) {
             mHelper.overScrollBy(deltaX, deltaY, scrollX, scrollY, scrollRangeX, scrollRangeY, maxOverScrollX, maxOverScrollY, isTouchEvent);
         }
         return super.overScrollBy(deltaX, deltaY, scrollX, scrollY, scrollRangeX, scrollRangeY, maxOverScrollX, maxOverScrollY, isTouchEvent);
-    }
-
-    @Override
-    public int computeVerticalScrollRange() {
-        return super.computeVerticalScrollRange();
     }
 }
 

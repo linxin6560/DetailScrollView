@@ -1,6 +1,7 @@
 package com.levylin.detailscrollview.views;
 
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.support.v4.view.ViewCompat;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -9,7 +10,13 @@ import android.view.VelocityTracker;
 import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.ViewGroup;
+import android.view.animation.AnimationUtils;
 import android.widget.Scroller;
+
+import com.levylin.detailscrollview.R;
+import com.levylin.detailscrollview.views.listener.OnScrollBarShowListener;
+
+import java.lang.reflect.Method;
 
 /**
  * Created by LinXin on 2017/3/25.
@@ -32,6 +39,7 @@ public class DetailScrollView extends ViewGroup {
     private int mMinimumVelocity;
     private int maxScrollY;
     private boolean mIsBeingDragged;
+    private MyScrollBarShowListener listener;
 
     public DetailScrollView(Context context) {
         super(context);
@@ -50,10 +58,24 @@ public class DetailScrollView extends ViewGroup {
 
     private void init(Context context) {
         setVerticalScrollBarEnabled(true);
+        setScrollbarFadingEnabled(true);
+        setWillNotDraw(false);//awakenScrollBars的时候会调用invalidate，设置这个为false，可以使invalidate调用draw方法，从而达到画进度条
         mScroller = new Scroller(context);
         final ViewConfiguration configuration = ViewConfiguration.get(getContext());
         mTouchSlop = configuration.getScaledTouchSlop();
         mMinimumVelocity = configuration.getScaledMinimumFlingVelocity();
+        listener = new MyScrollBarShowListener();
+
+        try {
+            //显示滚动条
+            TypedArray a = context.obtainStyledAttributes(R.styleable.View);
+            Method method = View.class.getDeclaredMethod("initializeScrollbars", TypedArray.class);
+            method.setAccessible(true);
+            method.invoke(this, a);
+            a.recycle();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -69,9 +91,11 @@ public class DetailScrollView extends ViewGroup {
         }
         if (mListView != null) {
             mListView.setScrollView(this);
+            mListView.setOnScrollBarShowListener(listener);
         }
         if (mWebView != null) {
             mWebView.setScrollView(this);
+            mWebView.setOnScrollBarShowListener(listener);
         }
     }
 
@@ -116,9 +140,9 @@ public class DetailScrollView extends ViewGroup {
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         int action = event.getAction();
-        float y = event.getRawY();
-        boolean isAtTop = getScrollY() == maxScrollY;//MyScroll是否在头部
-        boolean isAtBottom = getScrollY() == 0;//MyScroll是否在底部
+        float y = event.getY();
+        boolean isAtTop = getScrollY() >= maxScrollY;//MyScroll是否在头部
+        boolean isAtBottom = getScrollY() <= 0;//MyScroll是否在底部
         acquireVelocityTracker(event);
         switch (action) {
             case MotionEvent.ACTION_DOWN:
@@ -180,16 +204,6 @@ public class DetailScrollView extends ViewGroup {
      */
     private boolean isCanScroll() {
         return computeVerticalScrollRange() > getHeight();
-    }
-
-    /**
-     * 列表是否可滑动,列表的滑动范围大于其高度则代表可滑动
-     *
-     * @return true:可滑动
-     */
-    private boolean isListViewCanScroll() {
-        View view = (View) mListView;
-        return mListView.computeVerticalScrollRange() > view.getHeight();
     }
 
     @Override
@@ -358,11 +372,41 @@ public class DetailScrollView extends ViewGroup {
         super.computeScroll();
     }
 
+    protected int computeVerticalScrollExtent() {
+        try {
+            int webExtent = ViewUtils.computeVerticalScrollExtent((View) mWebView);
+            int listExtent = ViewUtils.computeVerticalScrollExtent((View) mListView);
+            LogE(TAG + "computeVerticalScrollExtent,webExtent=" + webExtent + ",listViewExtent=" + listExtent);
+            return webExtent + listExtent;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return super.computeVerticalScrollExtent();
+    }
+
+    protected int computeVerticalScrollOffset() {
+        try {
+            int webOffset = ViewUtils.computeVerticalScrollOffset((View) mWebView);
+            int listOffset = ViewUtils.computeVerticalScrollOffset((View) mListView);
+            LogE(TAG + "computeVerticalScrollOffset,webOffset=" + webOffset + ",listOffset=" + listOffset);
+            return webOffset + getScrollY() + listOffset;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return super.computeVerticalScrollOffset();
+    }
+
     @Override
     protected int computeVerticalScrollRange() {
-        int webScrollRange = mWebView.computeVerticalScrollRange();
-        int listScrollRange = mListView.computeVerticalScrollRange();
-        return webScrollRange + listScrollRange;
+        try {
+            int webScrollRange = ViewUtils.computeVerticalScrollRange((View) mWebView);
+            int listScrollRange = ViewUtils.computeVerticalScrollRange((View) mListView);
+            LogE(TAG + "computeVerticalScrollRange,webOffset=" + webScrollRange + ",listScrollRange=" + listScrollRange);
+            return webScrollRange + maxScrollY + listScrollRange;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return super.computeVerticalScrollRange();
     }
 
     @Override
@@ -411,5 +455,19 @@ public class DetailScrollView extends ViewGroup {
 
     public static void setDebug(boolean debug) {
         isDebug = debug;
+    }
+
+    private class MyScrollBarShowListener implements OnScrollBarShowListener {
+
+        private long mOldTimeMills;
+
+        @Override
+        public void onShow() {
+            long timeMills = AnimationUtils.currentAnimationTimeMillis();
+            if (timeMills - mOldTimeMills > 16) {
+                mOldTimeMills = timeMills;
+                awakenScrollBars();
+            }
+        }
     }
 }

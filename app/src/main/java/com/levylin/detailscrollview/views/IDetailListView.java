@@ -1,5 +1,7 @@
 package com.levylin.detailscrollview.views;
 
+import com.levylin.detailscrollview.views.listener.OnScrollBarShowListener;
+
 /**
  * Created by LinXin on 2017/3/31.
  */
@@ -13,5 +15,5 @@ public interface IDetailListView {
 
     boolean startFling(int vy);
 
-    int computeVerticalScrollRange();
+    void setOnScrollBarShowListener(OnScrollBarShowListener listener);
 }

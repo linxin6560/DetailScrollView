@@ -6,6 +6,7 @@ import android.view.MotionEvent;
 import android.view.View;
 
 import com.levylin.detailscrollview.views.helper.WebViewTouchHelper;
+import com.levylin.detailscrollview.views.listener.OnScrollBarShowListener;
 import com.tencent.smtt.sdk.WebView;
 import com.tencent.smtt.sdk.WebViewCallbackClient;
 
@@ -16,6 +17,7 @@ import com.tencent.smtt.sdk.WebViewCallbackClient;
 public class DetailX5WebView extends WebView implements IDetailWebView {
 
     private WebViewTouchHelper mHelper;
+    private OnScrollBarShowListener mScrollBarShowListener;
 
     public DetailX5WebView(Context context) {
         super(context);
@@ -43,6 +45,9 @@ public class DetailX5WebView extends WebView implements IDetailWebView {
 
             @Override
             public boolean overScrollBy(int deltaX, int deltaY, int scrollX, int scrollY, int scrollRangeX, int scrollRangeY, int maxOverScrollX, int maxOverScrollY, boolean isTouchEvent, View view) {
+                if (mScrollBarShowListener != null) {
+                    mScrollBarShowListener.onShow();
+                }
                 if (mHelper != null) {
                     mHelper.overScrollBy(deltaX, deltaY, scrollX, scrollY, scrollRangeX, scrollRangeY, maxOverScrollX, maxOverScrollY, isTouchEvent);
                 }
@@ -99,6 +104,11 @@ public class DetailX5WebView extends WebView implements IDetailWebView {
     @Override
     public int getActualHeight() {
         return (int) (getContentHeight() * getScale());
+    }
+
+    @Override
+    public void setOnScrollBarShowListener(OnScrollBarShowListener listener) {
+        mScrollBarShowListener = listener;
     }
 
     @Override
