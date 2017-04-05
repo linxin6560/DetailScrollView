@@ -372,6 +372,12 @@ public class DetailScrollView extends ViewGroup {
         super.computeScroll();
     }
 
+    /**
+     * 显示区域的高度
+     *
+     * @return
+     */
+    @Override
     protected int computeVerticalScrollExtent() {
         try {
             int webExtent = ViewUtils.computeVerticalScrollExtent((View) mWebView);
@@ -384,6 +390,11 @@ public class DetailScrollView extends ViewGroup {
         return super.computeVerticalScrollExtent();
     }
 
+    /**
+     * 已经向下滚动的距离，为0时表示已处于顶部。
+     *
+     * @return
+     */
     protected int computeVerticalScrollOffset() {
         try {
             int webOffset = ViewUtils.computeVerticalScrollOffset((View) mWebView);
@@ -396,6 +407,11 @@ public class DetailScrollView extends ViewGroup {
         return super.computeVerticalScrollOffset();
     }
 
+    /**
+     * 整体的高度，注意是整体，包括在显示区域之外的。
+     *
+     * @return
+     */
     @Override
     protected int computeVerticalScrollRange() {
         try {
