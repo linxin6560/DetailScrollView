@@ -79,6 +79,7 @@ public class WebViewTouchHelper {
 
     public boolean onTouchEvent(MotionEvent ev) {
         acquireVelocityTracker(ev);
+        DetailScrollView.LogE("WebViewTouchHelper...onTouchEvent.ev=" + ev.getAction());
         switch (ev.getAction()) {
             case MotionEvent.ACTION_DOWN:
                 mLastY = ev.getRawY();

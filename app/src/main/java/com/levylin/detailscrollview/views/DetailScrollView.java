@@ -103,8 +103,13 @@ public class DetailScrollView extends ViewGroup {
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
         final int count = getChildCount();
         final int parentLeft = getPaddingLeft();
+        int parentHeight = b - t;
         int lastBottom = getPaddingTop();
         maxScrollY = 0;
+
+        int webHeight = 0;
+        int listHeight = 0;
+        int otherHeight = 0;
 
         for (int i = 0; i < count; i++) {
             final View child = getChildAt(i);
@@ -120,10 +125,25 @@ public class DetailScrollView extends ViewGroup {
                 lastBottom = childTop + height + lp.bottomMargin;
                 maxScrollY += lp.topMargin;
                 maxScrollY += lp.bottomMargin;
-                if (!(child instanceof IDetailWebView)) {
-                    maxScrollY += height;//MyScrollView最大的滚动高度为除了WebView之外的其他控件高度总和
+                if (child instanceof IDetailWebView) {
+                    webHeight = height;
+                } else if (child instanceof IDetailListView) {
+                    listHeight = height;
+                } else {
+                    otherHeight += height;
                 }
             }
+            if (webHeight + listHeight + otherHeight <= parentHeight) {//总高度小于父容器高度
+                maxScrollY = 0;
+            } else if (webHeight < parentHeight && listHeight < parentHeight) {//网页高度和列表高度都小于父容器高度
+                maxScrollY = webHeight + otherHeight + listHeight - parentHeight;
+            } else if (webHeight + otherHeight < parentHeight) {//网页高度+其他高度<父容器高度，列表高度>=父容易高度，MyScrollView最多滑动到列表顶部与父容器的顶部重合
+                //所以可滑动的距离为网页高度+其他高度
+                maxScrollY = webHeight + otherHeight;
+            } else {//其他情况，要让MyScrollView最多滑动到列表底部与父容器底部重合,所以可滑动的距离为列表的高度+其他高度
+                maxScrollY = listHeight + otherHeight;
+            }
+            System.out.println("webHeight=" + webHeight + ",listHeight=" + listHeight + ",otherHeight=" + otherHeight + ",maxScrollY=" + maxScrollY);
         }
     }
 
@@ -183,9 +203,7 @@ public class DetailScrollView extends ViewGroup {
                     } else if (mWebView.canScrollVertically(DIRECT_BOTTOM) && isAtBottom) {//因为WebView可以继续上滑，故让丫的处理fling事件
                         mWebView.startFling(-initialVelocity);
                     } else {//上面两个没有处理fling事件，才轮到MyScrollView去处理
-                        if (isCanScroll()) {//不能滑动，则不触发fling
-                            fling(-initialVelocity);
-                        }
+                        fling(-initialVelocity);
                     }
                 }
                 releaseVelocityTracker();
@@ -197,15 +215,6 @@ public class DetailScrollView extends ViewGroup {
         return true;
     }
 
-    /**
-     * 是否可以滑动，当webView和listView的滑动范围之和大于高度时，才可滑动
-     *
-     * @return true:可滑动
-     */
-    private boolean isCanScroll() {
-        return computeVerticalScrollRange() > getHeight();
-    }
-
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
         final int childCount = getChildCount();
@@ -215,9 +224,9 @@ public class DetailScrollView extends ViewGroup {
         if (!touchInView((View) mWebView, ev) && !touchInView((View) mListView, ev)) {
             return false;
         }
-        LogE("onInterceptTouchEvent.getScrollY=" + getScrollY() + ",mWebHeight=" + maxScrollY + ",mScroller.isFinished()=" + mScroller.isFinished());
         boolean isCanScrollBottom = getScrollY() < maxScrollY && mScroller.isFinished();//是否可以向下滑
         boolean isCanScrollTop = getScrollY() > 0 && mScroller.isFinished();//是否可以向上滑
+        LogE("onInterceptTouchEvent.getScrollY=" + getScrollY() + ",maxScrollY=" + maxScrollY + ",mScroller.isFinished()=" + mScroller.isFinished() + ",isCanScrollBottom=" + isCanScrollBottom + ",isCanScrollTop=" + isCanScrollTop);
         final int action = ev.getAction();
         acquireVelocityTracker(ev);
         switch (action & MotionEvent.ACTION_MASK) {
@@ -233,43 +242,41 @@ public class DetailScrollView extends ViewGroup {
                 int deltaY = (int) (y - mLastY);
                 int distance = Math.abs(deltaY);
                 LogE("onInterceptTouchEvent.Move.......deltaY=" + deltaY + ",mTouchSlop=" + mTouchSlop);
-                if (distance > mTouchSlop) {
-                    if (deltaY < 0) { // Scroll To Bottom
-                        if (touchInView((View) mWebView, ev)) {
-                            // 第一个View不可以继续向下滚动，否则由这个View自己处理View内的滚动
-                            LogE("onInterceptTouchEvent.Move.......触摸点在第一个View...isCanScrollBottom=" + isCanScrollBottom);
-                            if (!mWebView.canScrollVertically(DIRECT_BOTTOM)) {
-                                if (isCanScrollBottom) {
-                                    mLastY = (int) ev.getY();
-                                    mIsBeingDragged = true;
-                                }
-                            }
-                        } else if (touchInView((View) mListView, ev)) { // 触摸点在第二个View
-                            LogE("onInterceptTouchEvent.Move.......触摸点在第二个View...isCanScrollBottom=" + isCanScrollBottom);
+                if (deltaY < 0) { // Scroll To Bottom
+                    if (touchInView((View) mWebView, ev)) {
+                        // 第一个View不可以继续向下滚动，否则由这个View自己处理View内的滚动
+                        LogE("onInterceptTouchEvent.Move.......触摸点在第一个View...isCanScrollBottom=" + isCanScrollBottom);
+                        if (!mWebView.canScrollVertically(DIRECT_BOTTOM)) {
                             if (isCanScrollBottom) {
+                                mLastY = (int) ev.getY();
                                 mIsBeingDragged = true;
                             }
-                        } else {
-                            mIsBeingDragged = false;
-                            mLastY = y;
                         }
-                    } else if (deltaY > 0) { // Scroll To Top
-                        if (touchInView((View) mWebView, ev)) {
-                            LogE("onInterceptTouchEvent.Move.......触摸点在第一个View...isCanScrollTop=" + isCanScrollTop);
+                    } else if (touchInView((View) mListView, ev)) { // 触摸点在第二个View
+                        LogE("onInterceptTouchEvent.Move.......触摸点在第二个View...isCanScrollBottom=" + isCanScrollBottom);
+                        if (isCanScrollBottom) {
+                            mIsBeingDragged = true;
+                        }
+                    } else {
+                        mIsBeingDragged = false;
+                        mLastY = y;
+                    }
+                } else if (deltaY > 0) { // Scroll To Top
+                    if (touchInView((View) mWebView, ev)) {
+                        LogE("onInterceptTouchEvent.Move.......触摸点在第一个View...isCanScrollTop=" + isCanScrollTop);
+                        if (isCanScrollTop) {
+                            mIsBeingDragged = true;
+                        }
+                    } else if (touchInView((View) mListView, ev)) {
+                        LogE("onInterceptTouchEvent.Move.......触摸点在第二个View...isCanScrollTop=" + isCanScrollTop);
+                        if (!mListView.canScrollVertically(DIRECT_TOP)) {
                             if (isCanScrollTop) {
+                                mLastY = y;
                                 mIsBeingDragged = true;
                             }
-                        } else if (touchInView((View) mListView, ev)) {
-                            LogE("onInterceptTouchEvent.Move.......触摸点在第二个View...isCanScrollTop=" + isCanScrollTop);
-                            if (!mListView.canScrollVertically(DIRECT_TOP)) {
-                                if (isCanScrollTop) {
-                                    mLastY = y;
-                                    mIsBeingDragged = true;
-                                }
-                            }
-                        } else {
-                            mIsBeingDragged = false;
                         }
+                    } else {
+                        mIsBeingDragged = false;
                     }
                 }
                 break;
@@ -281,7 +288,7 @@ public class DetailScrollView extends ViewGroup {
                 break;
             }
         }
-        LogE("onInterceptTouchEvent.Move.......mIsBeingDragged...." + mIsBeingDragged + "," + ev.getAction());
+        LogE("onInterceptTouchEvent........mIsBeingDragged=" + mIsBeingDragged + "," + ev.getAction());
         return mIsBeingDragged;
     }
 
@@ -303,27 +310,15 @@ public class DetailScrollView extends ViewGroup {
     }
 
     public int adjustScrollY(int delta) {
-        int dy = 0;
-        int distance = Math.abs(delta);
-        if (delta > 0) { // Scroll To Bottom
-            View listView = (View) mListView;
-            if (listView.getVisibility() == VISIBLE) {
-                int scrollTop = listView.getTop() - getScrollY(); // 最多滚动到第二个View的顶部和Container顶部对齐
-                int scrollBottom = listView.getBottom() - getScrollY() - getBottom(); // 最多滚动到第二个View的底部和Container对齐
-                int min = Math.min(scrollTop, scrollBottom);
-                dy = Math.min(min, distance);
-                LogE(TAG + ".adjustScrollY...delta>0...dy=" + dy + ",delta=" + delta + ",scrollTop=" + scrollTop + ",scrollBottom=" + scrollBottom);
-            } else {
-                dy = 0;
-            }
-        } else if (delta < 0) { // Scroll To Top
-            dy = -Math.min(distance, getScrollY());
-            LogE(TAG + ".adjustScrollY...delta<0...dy=" + dy + ",delta=" + delta);
-        }
-        if (!isCanScroll()) {//不能滑动，则dy=0
+        int dy;
+        if (delta + getScrollY() >= maxScrollY) {
+            dy = maxScrollY - getScrollY();
+        } else if (delta + getScrollY() <= 0) {
             dy = 0;
+        } else {
+            dy = delta;
         }
-        LogE(TAG + ".adjustScrollY...finally...dy=" + dy + ",delta=" + delta + ",isCanScroll()=" + isCanScroll());
+        LogE(TAG + ".adjustScrollY...finally...dy=" + dy + ",delta=" + delta);
         return dy;
     }
 
@@ -348,14 +343,12 @@ public class DetailScrollView extends ViewGroup {
         int currY = mScroller.getCurrY();
         int curVelocity = getCappedCurVelocity();
         LogE("computeScroll...oldX=" + oldX + ",oldY=" + oldY + ",currX=" + currX + ",currY=" + currY + ",curVelocity=" + curVelocity);
-        if (currY <= oldY || oldY < maxScrollY) {
-            if (currY < oldY && oldY <= 0) {
-                if (curVelocity != 0) {
-                    LogE("webView start fling:" + (-curVelocity));
-                    this.mScroller.forceFinished(true);
-                    this.mWebView.startFling(-curVelocity);
-                    return;
-                }
+        if (currY < oldY && oldY <= 0) {
+            if (curVelocity != 0) {
+                LogE("webView start fling:" + (-curVelocity));
+                this.mScroller.forceFinished(true);
+                this.mWebView.startFling(-curVelocity);
+                return;
             }
         } else if (currY > oldY && oldY >= maxScrollY && curVelocity != 0 && mListView.startFling(curVelocity)) {
             LogE("listView start fling:" + (-curVelocity));
@@ -363,11 +356,9 @@ public class DetailScrollView extends ViewGroup {
             return;
         }
         int toY = Math.max(0, Math.min(currY, maxScrollY));
+        LogE("scrollTo....oldX=" + oldX + ",currX=" + currX + ",oldY=" + oldY + ",currY=" + currY + ",toY=" + toY);
         if (oldX != currX || oldY != currY) {
             scrollTo(currX, toY);
-        }
-        if (!awakenScrollBars()) {
-            ViewCompat.postInvalidateOnAnimation(this);
         }
         super.computeScroll();
     }
@@ -382,7 +373,6 @@ public class DetailScrollView extends ViewGroup {
         try {
             int webExtent = ViewUtils.computeVerticalScrollExtent((View) mWebView);
             int listExtent = ViewUtils.computeVerticalScrollExtent((View) mListView);
-            LogE(TAG + "computeVerticalScrollExtent,webExtent=" + webExtent + ",listViewExtent=" + listExtent);
             return webExtent + listExtent;
         } catch (Exception e) {
             e.printStackTrace();
@@ -399,7 +389,6 @@ public class DetailScrollView extends ViewGroup {
         try {
             int webOffset = ViewUtils.computeVerticalScrollOffset((View) mWebView);
             int listOffset = ViewUtils.computeVerticalScrollOffset((View) mListView);
-            LogE(TAG + "computeVerticalScrollOffset,webOffset=" + webOffset + ",listOffset=" + listOffset);
             return webOffset + getScrollY() + listOffset;
         } catch (Exception e) {
             e.printStackTrace();
@@ -417,7 +406,6 @@ public class DetailScrollView extends ViewGroup {
         try {
             int webScrollRange = ViewUtils.computeVerticalScrollRange((View) mWebView);
             int listScrollRange = ViewUtils.computeVerticalScrollRange((View) mListView);
-            LogE(TAG + "computeVerticalScrollRange,webOffset=" + webScrollRange + ",listScrollRange=" + listScrollRange);
             return webScrollRange + maxScrollY + listScrollRange;
         } catch (Exception e) {
             e.printStackTrace();

@@ -39,8 +39,8 @@ public class DetailX5WebView extends WebView implements IDetailWebView {
         setOverScrollMode(OVER_SCROLL_NEVER);
         setWebViewCallbackClient(new WebViewCallbackClient() {
             @Override
-            public boolean onTouchEvent(MotionEvent motionEvent, View view) {
-                return super_onTouchEvent(motionEvent);
+            public boolean onTouchEvent(MotionEvent ev, View view) {
+                return !(mHelper != null && !mHelper.onTouchEvent(ev)) && super_onTouchEvent(ev);
             }
 
             @Override
@@ -79,11 +79,6 @@ public class DetailX5WebView extends WebView implements IDetailWebView {
                 super_onScrollChanged(i, i1, i2, i3);
             }
         });
-    }
-
-    @Override
-    public boolean onTouchEvent(MotionEvent ev) {
-        return !(mHelper != null && !mHelper.onTouchEvent(ev)) && super.onTouchEvent(ev);
     }
 
     @Override
