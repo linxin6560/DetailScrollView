@@ -6,6 +6,7 @@ import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
+import com.levylin.detailscrollview.views.DetailScrollView;
 import com.levylin.detailscrollview.views.DetailX5WebView;
 import com.tencent.smtt.sdk.WebSettings;
 import com.tencent.smtt.sdk.WebView;
@@ -21,14 +22,18 @@ public class X5WebViewListViewActivity extends AppCompatActivity implements View
     private String longUrl = "http://m.leju.com/tg/toutiao/info.html?city=xm&id=6253374704485472431&source=ttsy&source_ext=ttsy";
     private String shortUrl = "file:///android_asset/test";
     private DetailX5WebView webView;
+    private DetailScrollView mScrollView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.act_x5webview_listview);
+
+        mScrollView = (DetailScrollView) findViewById(R.id.test_sv);
+
         ListView listView = (ListView) findViewById(R.id.test_lv);
         list = new ArrayList<>();
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < 20; i++) {
             list.add("测试:" + i);
         }
         adapter = new ArrayAdapter<>(this, android.R.layout.simple_expandable_list_item_1, list);
@@ -52,6 +57,7 @@ public class X5WebViewListViewActivity extends AppCompatActivity implements View
         findViewById(R.id.webview_content_short_btn).setOnClickListener(this);
         findViewById(R.id.listview_content_long_btn).setOnClickListener(this);
         findViewById(R.id.listview_content_short_btn).setOnClickListener(this);
+        findViewById(R.id.move_to_list).setOnClickListener(this);
     }
 
     @Override
@@ -76,6 +82,9 @@ public class X5WebViewListViewActivity extends AppCompatActivity implements View
                     list.add("测试:" + i);
                 }
                 adapter.notifyDataSetChanged();
+                break;
+            case R.id.move_to_list:
+                mScrollView.scrollToListView();
                 break;
         }
     }

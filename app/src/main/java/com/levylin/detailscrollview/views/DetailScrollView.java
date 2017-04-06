@@ -35,11 +35,13 @@ public class DetailScrollView extends ViewGroup {
     private Scroller mScroller;
     private float mLastY;
     private VelocityTracker mVelocityTracker;
-    private int mTouchSlop;
     private int mMinimumVelocity;
     private int maxScrollY;
     private boolean mIsBeingDragged;
     private MyScrollBarShowListener listener;
+
+    private int oldScrollY;
+    private int oldWebViewScrollY;
 
     public DetailScrollView(Context context) {
         super(context);
@@ -62,7 +64,6 @@ public class DetailScrollView extends ViewGroup {
         setWillNotDraw(false);//awakenScrollBars的时候会调用invalidate，设置这个为false，可以使invalidate调用draw方法，从而达到画进度条
         mScroller = new Scroller(context);
         final ViewConfiguration configuration = ViewConfiguration.get(getContext());
-        mTouchSlop = configuration.getScaledTouchSlop();
         mMinimumVelocity = configuration.getScaledMinimumFlingVelocity();
         listener = new MyScrollBarShowListener();
 
@@ -240,8 +241,7 @@ public class DetailScrollView extends ViewGroup {
             case MotionEvent.ACTION_MOVE: {
                 int y = (int) ev.getY();
                 int deltaY = (int) (y - mLastY);
-                int distance = Math.abs(deltaY);
-                LogE("onInterceptTouchEvent.Move.......deltaY=" + deltaY + ",mTouchSlop=" + mTouchSlop);
+                LogE("onInterceptTouchEvent.Move.......deltaY=" + deltaY);
                 if (deltaY < 0) { // Scroll To Bottom
                     if (touchInView((View) mWebView, ev)) {
                         // 第一个View不可以继续向下滚动，否则由这个View自己处理View内的滚动
@@ -342,22 +342,26 @@ public class DetailScrollView extends ViewGroup {
         int currX = mScroller.getCurrX();
         int currY = mScroller.getCurrY();
         int curVelocity = getCappedCurVelocity();
-        LogE("computeScroll...oldX=" + oldX + ",oldY=" + oldY + ",currX=" + currX + ",currY=" + currY + ",curVelocity=" + curVelocity);
+        LogE("computeScroll...oldY=" + oldY + ",currY=" + currY + ",maxScrollY=" + maxScrollY + ",curVelocity=" + curVelocity);
         if (currY < oldY && oldY <= 0) {
             if (curVelocity != 0) {
-                LogE("webView start fling:" + (-curVelocity));
+                LogE("computeScroll...webView start fling:" + (-curVelocity));
                 this.mScroller.forceFinished(true);
                 this.mWebView.startFling(-curVelocity);
                 return;
             }
         } else if (currY > oldY && oldY >= maxScrollY && curVelocity != 0 && mListView.startFling(curVelocity)) {
-            LogE("listView start fling:" + (-curVelocity));
+            LogE("computeScroll...listView start fling:" + (-curVelocity));
             mScroller.forceFinished(true);
             return;
         }
         int toY = Math.max(0, Math.min(currY, maxScrollY));
         if (oldX != currX || oldY != currY) {
+            LogE("computeScroll...scrollTo.." + toY);
             scrollTo(currX, toY);
+        }
+        if (!awakenScrollBars()) {//这句一定要执行，否则会导致mScroller永远不会finish，从而导致一些莫名其妙的bug
+            ViewCompat.postInvalidateOnAnimation(this);
         }
         super.computeScroll();
     }
@@ -448,6 +452,39 @@ public class DetailScrollView extends ViewGroup {
     @Override
     public LayoutParams generateLayoutParams(AttributeSet attrs) {
         return new MarginLayoutParams(getContext(), attrs);
+    }
+
+    /**
+     * 跳转到列表区域，如果已经在列表区域，则跳回去，如果滚动动画没有结束，则无响应
+     */
+    public void scrollToListView() {
+        if (!mScroller.isFinished()) {
+            return;
+        }
+        View webView = (View) mWebView;
+        int dy;
+        int webViewToY;
+        int scrollY = getScrollY();
+        if (scrollY >= maxScrollY) {
+            dy = oldScrollY - maxScrollY;
+            webViewToY = oldWebViewScrollY;
+        } else {
+            dy = maxScrollY - scrollY;
+            oldScrollY = scrollY;
+            if (webView instanceof DetailX5WebView) {
+                oldWebViewScrollY = ((DetailX5WebView) webView).getWebScrollY();
+            } else {
+                oldWebViewScrollY = webView.getScrollY();
+            }
+            webViewToY = mWebView.getActualHeight();
+        }
+        mScroller.startScroll(getScrollX(), getScrollY(), 0, dy);
+        if (webView instanceof DetailX5WebView) {
+            ((DetailX5WebView) webView).getView().scrollTo(0, webViewToY);
+        } else {
+            webView.scrollTo(0, webViewToY);
+        }
+        ViewCompat.postInvalidateOnAnimation(this);
     }
 
     public static void LogE(String content) {

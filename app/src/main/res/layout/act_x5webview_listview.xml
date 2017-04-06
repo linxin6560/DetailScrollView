@@ -46,6 +46,12 @@
             android:text="短列表" />
     </RadioGroup>
 
+    <Button
+        android:id="@+id/move_to_list"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="滑动到ListView" />
+
     <com.levylin.detailscrollview.views.DetailScrollView
         android:id="@+id/test_sv"
         android:layout_width="match_parent"
