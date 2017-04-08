@@ -144,7 +144,6 @@ public class DetailScrollView extends ViewGroup {
             } else {//其他情况，要让MyScrollView最多滑动到列表底部与父容器底部重合,所以可滑动的距离为列表的高度+其他高度
                 maxScrollY = listHeight + otherHeight;
             }
-            System.out.println("webHeight=" + webHeight + ",listHeight=" + listHeight + ",otherHeight=" + otherHeight + ",maxScrollY=" + maxScrollY);
         }
     }
 
@@ -326,7 +325,7 @@ public class DetailScrollView extends ViewGroup {
         LogE("fling...." + velocity + ",mScroller.isFinished()=" + mScroller.isFinished());
         if (!mScroller.isFinished())
             return;
-        int minY = -mWebView.getActualHeight();
+        int minY = -mWebView.customGetContentHeight();
         mScroller.fling(getScrollX(), getScrollY(), 0, velocity, 0, 0, minY, computeVerticalScrollRange());
         ViewCompat.postInvalidateOnAnimation(this);
     }
@@ -407,7 +406,7 @@ public class DetailScrollView extends ViewGroup {
     @Override
     protected int computeVerticalScrollRange() {
         try {
-            int webScrollRange = ViewUtils.computeVerticalScrollRange((View) mWebView);
+            int webScrollRange = mWebView.customComputeVerticalScrollRange();
             int listScrollRange = ViewUtils.computeVerticalScrollRange((View) mListView);
             return webScrollRange + maxScrollY + listScrollRange;
         } catch (Exception e) {
@@ -461,7 +460,6 @@ public class DetailScrollView extends ViewGroup {
         if (!mScroller.isFinished()) {
             return;
         }
-        View webView = (View) mWebView;
         int dy;
         int webViewToY;
         int scrollY = getScrollY();
@@ -471,19 +469,11 @@ public class DetailScrollView extends ViewGroup {
         } else {
             dy = maxScrollY - scrollY;
             oldScrollY = scrollY;
-            if (webView instanceof DetailX5WebView) {
-                oldWebViewScrollY = ((DetailX5WebView) webView).getWebScrollY();
-            } else {
-                oldWebViewScrollY = webView.getScrollY();
-            }
-            webViewToY = mWebView.getActualHeight();
+            oldWebViewScrollY = mWebView.customGetWebScrollY();
+            webViewToY = mWebView.customComputeVerticalScrollRange();
         }
+        mWebView.customScrollTo(webViewToY);
         mScroller.startScroll(getScrollX(), getScrollY(), 0, dy);
-        if (webView instanceof DetailX5WebView) {
-            ((DetailX5WebView) webView).getView().scrollTo(0, webViewToY);
-        } else {
-            webView.scrollTo(0, webViewToY);
-        }
         ViewCompat.postInvalidateOnAnimation(this);
     }
 

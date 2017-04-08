@@ -7,14 +7,15 @@ import android.view.View;
 
 import com.levylin.detailscrollview.views.helper.WebViewTouchHelper;
 import com.levylin.detailscrollview.views.listener.OnScrollBarShowListener;
-import com.tencent.smtt.sdk.WebView;
+import com.tencent.smtt.export.external.extension.interfaces.IX5WebViewClientExtension;
+import com.tencent.smtt.export.external.extension.proxy.X5ProxyWebViewClientExtension;
 import com.tencent.smtt.sdk.WebViewCallbackClient;
 
 /**
  * 腾讯X5的WebView内核
  * Created by LinXin on 2017/3/31.
  */
-public class DetailX5WebView extends WebView implements IDetailWebView {
+public class DetailX5WebView extends X5WebView implements IDetailWebView {
 
     private WebViewTouchHelper mHelper;
     private OnScrollBarShowListener mScrollBarShowListener;
@@ -29,14 +30,20 @@ public class DetailX5WebView extends WebView implements IDetailWebView {
         init();
     }
 
-    public DetailX5WebView(Context context, AttributeSet attributeSet, int i) {
-        super(context, attributeSet, i);
-        init();
-    }
-
     protected void init() {
         getView().setVerticalScrollBarEnabled(false);
-        setOverScrollMode(OVER_SCROLL_NEVER);
+        getView().setOverScrollMode(OVER_SCROLL_NEVER);
+        if (getX5WebViewExtension() != null) {
+            initX5CoreWebView();
+        } else {
+            initSystemCoreWebView();
+        }
+    }
+
+    /**
+     * 初始化系统浏览器
+     */
+    private void initSystemCoreWebView() {
         setWebViewCallbackClient(new WebViewCallbackClient() {
             @Override
             public boolean onTouchEvent(MotionEvent ev, View view) {
@@ -45,11 +52,12 @@ public class DetailX5WebView extends WebView implements IDetailWebView {
 
             @Override
             public boolean overScrollBy(int deltaX, int deltaY, int scrollX, int scrollY, int scrollRangeX, int scrollRangeY, int maxOverScrollX, int maxOverScrollY, boolean isTouchEvent, View view) {
+                //系统内核显示进度条和计算速度走这边
                 if (mScrollBarShowListener != null) {
                     mScrollBarShowListener.onShow();
                 }
                 if (mHelper != null) {
-                    mHelper.overScrollBy(deltaX, deltaY, scrollX, scrollY, scrollRangeX, scrollRangeY, maxOverScrollX, maxOverScrollY, isTouchEvent);
+                    mHelper.overScrollBy(deltaY, scrollY, scrollRangeY);
                 }
                 return super_overScrollBy(deltaX, deltaY, scrollX, scrollY, scrollRangeX, scrollRangeY, maxOverScrollX, maxOverScrollY, isTouchEvent);
             }
@@ -81,6 +89,34 @@ public class DetailX5WebView extends WebView implements IDetailWebView {
         });
     }
 
+    /**
+     * 初始化X5WebView
+     */
+    private void initX5CoreWebView() {
+        IX5WebViewClientExtension clientExtension = getWebViewClientExtension();
+        getX5WebViewExtension().setWebViewClientExtension(new X5ProxyWebViewClientExtension(clientExtension) {
+
+            @Override
+            public boolean onTouchEvent(MotionEvent ev, View view) {
+                return !(mHelper != null && !mHelper.onTouchEvent(ev)) && super.onTouchEvent(ev, view);
+            }
+        });
+    }
+
+    @Override
+    protected void onScrollChanged(int l, int t, int oldl, int oldt) {
+        super.onScrollChanged(l, t, oldl, oldt);
+        //X5内核的显示进度条和计算速度走这边
+        if (mScrollBarShowListener != null) {
+            mScrollBarShowListener.onShow();
+        }
+        int deltaY = t - oldt;
+        int height = getHeight() - getPaddingTop() - getPaddingBottom();
+        if (mHelper != null) {
+            mHelper.overScrollBy(deltaY, oldt, computeVerticalScrollRange() - height);//计算速度
+        }
+    }
+
     @Override
     public void setScrollView(DetailScrollView scrollView) {
         mHelper = new WebViewTouchHelper(scrollView, this);
@@ -92,13 +128,28 @@ public class DetailX5WebView extends WebView implements IDetailWebView {
     }
 
     @Override
+    public void customScrollTo(int toY) {
+        getView().scrollTo(0, toY);
+    }
+
+    @Override
     public void startFling(int vy) {
         flingScroll(0, vy);
     }
 
     @Override
-    public int getActualHeight() {
+    public int customGetContentHeight() {
         return (int) (getContentHeight() * getScale());
+    }
+
+    @Override
+    public int customGetWebScrollY() {
+        return getWebScrollY();
+    }
+
+    @Override
+    public int customComputeVerticalScrollRange() {
+        return super.computeVerticalScrollRange();
     }
 
     @Override

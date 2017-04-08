@@ -13,9 +13,15 @@ public interface IDetailWebView {
 
     void customScrollBy(int dy);
 
-    void startFling(int vy);
+    void customScrollTo(int toY);
 
-    int getActualHeight();
+    int customGetContentHeight();
+
+    int customGetWebScrollY();
+
+    int customComputeVerticalScrollRange();
+
+    void startFling(int vy);
 
     void setOnScrollBarShowListener(OnScrollBarShowListener listener);
 }

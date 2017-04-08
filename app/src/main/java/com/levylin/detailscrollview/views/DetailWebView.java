@@ -48,13 +48,28 @@ public class DetailWebView extends WebView implements IDetailWebView {
     }
 
     @Override
+    public void customScrollTo(int toY) {
+        scrollTo(0,toY);
+    }
+
+    @Override
     public void startFling(int vy) {
         flingScroll(0, vy);
     }
 
     @Override
-    public int getActualHeight() {
+    public int customGetContentHeight() {
         return (int) (getContentHeight() * getScale());
+    }
+
+    @Override
+    public int customGetWebScrollY() {
+        return getScrollY();
+    }
+
+    @Override
+    public int customComputeVerticalScrollRange() {
+        return super.computeVerticalScrollRange();
     }
 
     @Override
@@ -68,7 +83,7 @@ public class DetailWebView extends WebView implements IDetailWebView {
             mScrollBarShowListener.onShow();
         }
         if (mHelper != null) {
-            mHelper.overScrollBy(deltaX, deltaY, scrollX, scrollY, scrollRangeX, scrollRangeY, maxOverScrollX, maxOverScrollY, isTouchEvent);
+            mHelper.overScrollBy(deltaY, scrollY, scrollRangeY);
         }
         return super.overScrollBy(deltaX, deltaY, scrollX, scrollY, scrollRangeX, scrollRangeY, maxOverScrollX, maxOverScrollY, isTouchEvent);
     }

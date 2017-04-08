@@ -6,10 +6,14 @@ import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 
+import com.levylin.detailscrollview.views.DetailX5WebView;
+
 /**
  * Created by LinXin on 2017/3/31.
  */
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+
+    private String longUrl = "http://m.leju.com/tg/toutiao/info.html?city=xm&id=6253374704485472431&source=ttsy&source_ext=ttsy";
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {

@@ -47,17 +47,13 @@ public class WebViewTouchHelper {
     /**
      * 计算webView的滑动速度
      *
-     * @param deltaX
      * @param deltaY
-     * @param scrollX
      * @param scrollY
-     * @param scrollRangeX
      * @param scrollRangeY
-     * @param maxOverScrollX
-     * @param maxOverScrollY
-     * @param isTouchEvent
      */
-    public void overScrollBy(int deltaX, int deltaY, int scrollX, int scrollY, int scrollRangeX, int scrollRangeY, int maxOverScrollX, int maxOverScrollY, boolean isTouchEvent) {
+    //WebViewTouchHelper...overScrollBy...deltaY=1,scrollY=1281,scrollRangeY=22833
+    public void overScrollBy(int deltaY, int scrollY, int scrollRangeY) {
+        System.out.println("WebViewTouchHelper...overScrollBy...deltaY=" + deltaY + ",scrollY=" + scrollY + ",scrollRangeY=" + scrollRangeY);
         if (speedItems.size() >= 10) {
             speedItems.removeFirst();
         }
@@ -77,6 +73,12 @@ public class WebViewTouchHelper {
         }
     }
 
+    /**
+     * 处理点击事件
+     *
+     * @param ev
+     * @return
+     */
     public boolean onTouchEvent(MotionEvent ev) {
         acquireVelocityTracker(ev);
         DetailScrollView.LogE("WebViewTouchHelper...onTouchEvent.ev=" + ev.getAction());

@@ -8,9 +8,6 @@ import android.widget.ListView;
 
 import com.levylin.detailscrollview.views.DetailScrollView;
 import com.levylin.detailscrollview.views.DetailX5WebView;
-import com.tencent.smtt.sdk.WebSettings;
-import com.tencent.smtt.sdk.WebView;
-import com.tencent.smtt.sdk.WebViewClient;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,16 +38,6 @@ public class X5WebViewListViewActivity extends AppCompatActivity implements View
 
 
         webView = (DetailX5WebView) findViewById(R.id.test_webview);
-        WebSettings webSettings = webView.getSettings();
-        webSettings.setJavaScriptEnabled(true);
-        webView.setWebViewClient(new WebViewClient() {
-
-            public boolean shouldOverrideUrlLoading(WebView view, String url) { //  重写此方法表明点击网页里面的链接还是在当前的webview里跳转，不跳到浏览器那边
-                view.loadUrl(url);
-                return true;
-            }
-
-        });
         webView.loadUrl(longUrl);
 
         findViewById(R.id.webview_content_long_btn).setOnClickListener(this);
