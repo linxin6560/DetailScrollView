@@ -460,6 +460,8 @@ public class DetailScrollView extends ViewGroup {
         if (!mScroller.isFinished()) {
             return;
         }
+        View webView = (View) mWebView;
+        int webHeight = webView.getHeight() - webView.getPaddingTop() - webView.getPaddingBottom();
         int dy;
         int webViewToY;
         int scrollY = getScrollY();
@@ -470,7 +472,7 @@ public class DetailScrollView extends ViewGroup {
             dy = maxScrollY - scrollY;
             oldScrollY = scrollY;
             oldWebViewScrollY = mWebView.customGetWebScrollY();
-            webViewToY = mWebView.customComputeVerticalScrollRange();
+            webViewToY = mWebView.customComputeVerticalScrollRange() - webHeight;
         }
         mWebView.customScrollTo(webViewToY);
         mScroller.startScroll(getScrollX(), getScrollY(), 0, dy);

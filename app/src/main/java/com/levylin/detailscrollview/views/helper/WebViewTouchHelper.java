@@ -51,9 +51,7 @@ public class WebViewTouchHelper {
      * @param scrollY
      * @param scrollRangeY
      */
-    //WebViewTouchHelper...overScrollBy...deltaY=1,scrollY=1281,scrollRangeY=22833
     public void overScrollBy(int deltaY, int scrollY, int scrollRangeY) {
-        System.out.println("WebViewTouchHelper...overScrollBy...deltaY=" + deltaY + ",scrollY=" + scrollY + ",scrollRangeY=" + scrollRangeY);
         if (speedItems.size() >= 10) {
             speedItems.removeFirst();
         }
