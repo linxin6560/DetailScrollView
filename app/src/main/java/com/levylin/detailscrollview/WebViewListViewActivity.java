@@ -2,23 +2,29 @@ package com.levylin.detailscrollview;
 
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.view.View;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
+import com.levylin.detailscrollview.views.DetailScrollView;
 import com.levylin.detailscrollview.views.DetailWebView;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class WebViewListViewActivity extends AppCompatActivity {
+public class WebViewListViewActivity extends AppCompatActivity implements View.OnClickListener {
+
+    private DetailScrollView mScrollView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.act_webview_listview);
+        mScrollView = (DetailScrollView) findViewById(R.id.test_sv);
+        findViewById(R.id.move_to_list).setOnClickListener(this);
         ListView listView = (ListView) findViewById(R.id.test_lv);
         List<String> list = new ArrayList<>();
         for (int i = 0; i < 100; i++) {
@@ -38,5 +44,14 @@ public class WebViewListViewActivity extends AppCompatActivity {
             }
         });
         webView.loadUrl(url);
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()){
+            case R.id.move_to_list:
+                mScrollView.scrollToListView();
+                break;
+        }
     }
 }

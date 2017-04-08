@@ -16,4 +16,9 @@ public interface IDetailListView {
     boolean startFling(int vy);
 
     void setOnScrollBarShowListener(OnScrollBarShowListener listener);
+
+    /**
+     * 滑到第一项
+     */
+    void scrollToFirst();
 }

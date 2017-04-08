@@ -2,7 +2,10 @@ package com.levylin.detailscrollview.views;
 
 import android.content.Context;
 import android.support.annotation.Nullable;
+import android.support.v7.widget.GridLayoutManager;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 
@@ -23,10 +26,16 @@ public class DetailRecyclerView extends RecyclerView implements IDetailListView 
 
     public DetailRecyclerView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
+        init();
     }
 
     public DetailRecyclerView(Context context, @Nullable AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
+        init();
+    }
+
+    private void init(){
+        setOverScrollMode(OVER_SCROLL_NEVER);
     }
 
     @Override
@@ -54,6 +63,16 @@ public class DetailRecyclerView extends RecyclerView implements IDetailListView 
     @Override
     public void setOnScrollBarShowListener(OnScrollBarShowListener listener) {
         mScrollBarShowListener = listener;
+    }
+
+    @Override
+    public void scrollToFirst() {
+        LayoutManager layoutManager = getLayoutManager();
+        if (layoutManager instanceof LinearLayoutManager) {
+            ((LinearLayoutManager) layoutManager).scrollToPositionWithOffset(0, 0);
+        } else if (layoutManager instanceof StaggeredGridLayoutManager) {
+            ((StaggeredGridLayoutManager) layoutManager).scrollToPositionWithOffset(0, 0);
+        }
     }
 
     @Override

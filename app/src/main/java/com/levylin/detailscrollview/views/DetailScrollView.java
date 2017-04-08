@@ -474,6 +474,7 @@ public class DetailScrollView extends ViewGroup {
             oldWebViewScrollY = mWebView.customGetWebScrollY();
             webViewToY = mWebView.customComputeVerticalScrollRange() - webHeight;
         }
+        mListView.scrollToFirst();
         mWebView.customScrollTo(webViewToY);
         mScroller.startScroll(getScrollX(), getScrollY(), 0, dy);
         ViewCompat.postInvalidateOnAnimation(this);

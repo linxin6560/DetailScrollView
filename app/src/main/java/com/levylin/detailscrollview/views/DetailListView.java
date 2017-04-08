@@ -89,6 +89,11 @@ public class DetailListView extends ListView implements IDetailListView, AbsList
     }
 
     @Override
+    public void scrollToFirst() {
+        setSelectionFromTop(0, 0);
+    }
+
+    @Override
     public void setScrollView(DetailScrollView scrollView) {
         mHelper = new ListViewTouchHelper(scrollView, this);
     }
