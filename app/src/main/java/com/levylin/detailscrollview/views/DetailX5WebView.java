@@ -98,7 +98,11 @@ public class DetailX5WebView extends X5WebView implements IDetailWebView {
 
             @Override
             public boolean onTouchEvent(MotionEvent ev, View view) {
-                return !(mHelper != null && !mHelper.onTouchEvent(ev)) && super.onTouchEvent(ev, view);
+                if (mHelper == null)
+                    return super.onTouchEvent(ev, view);
+                if (mHelper.onTouchEvent(ev))
+                    return true;
+                return super.onTouchEvent(ev, view);
             }
         });
     }

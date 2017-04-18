@@ -134,16 +134,16 @@ public class DetailScrollView extends ViewGroup {
                     otherHeight += height;
                 }
             }
-            if (webHeight + listHeight + otherHeight <= parentHeight) {//总高度小于父容器高度
-                maxScrollY = 0;
-            } else if (webHeight < parentHeight && listHeight < parentHeight) {//网页高度和列表高度都小于父容器高度
-                maxScrollY = webHeight + otherHeight + listHeight - parentHeight;
-            } else if (webHeight + otherHeight < parentHeight) {//网页高度+其他高度<父容器高度，列表高度>=父容易高度，MyScrollView最多滑动到列表顶部与父容器的顶部重合
-                //所以可滑动的距离为网页高度+其他高度
-                maxScrollY = webHeight + otherHeight;
-            } else {//其他情况，要让MyScrollView最多滑动到列表底部与父容器底部重合,所以可滑动的距离为列表的高度+其他高度
-                maxScrollY = listHeight + otherHeight;
-            }
+        }
+        if (webHeight + listHeight + otherHeight <= parentHeight) {//总高度小于父容器高度
+            maxScrollY = 0;
+        } else if (webHeight < parentHeight && listHeight < parentHeight) {//网页高度和列表高度都小于父容器高度
+            maxScrollY = webHeight + otherHeight + listHeight - parentHeight;
+        } else if (webHeight + otherHeight < parentHeight) {//网页高度+其他高度<父容器高度，列表高度>=父容易高度，MyScrollView最多滑动到列表顶部与父容器的顶部重合
+            //所以可滑动的距离为网页高度+其他高度
+            maxScrollY = webHeight + otherHeight;
+        } else {//其他情况，要让MyScrollView最多滑动到列表底部与父容器底部重合,所以可滑动的距离为列表的高度+其他高度
+            maxScrollY = listHeight + otherHeight;
         }
     }
 

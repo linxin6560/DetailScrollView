@@ -39,7 +39,11 @@ public class DetailWebView extends WebView implements IDetailWebView {
 
     @Override
     public boolean onTouchEvent(MotionEvent ev) {
-        return !(mHelper != null && !mHelper.onTouchEvent(ev)) && super.onTouchEvent(ev);
+        if (mHelper == null)
+            return super.onTouchEvent(ev);
+        if (mHelper.onTouchEvent(ev))
+            return true;
+        return super.onTouchEvent(ev);
     }
 
     @Override

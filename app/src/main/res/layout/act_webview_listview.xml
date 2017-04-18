@@ -20,6 +20,12 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
 
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="100dp"
+            android:gravity="center"
+            android:text="测试..." />
+
         <com.levylin.detailscrollview.views.DetailListView
             android:id="@+id/test_lv"
             android:layout_width="match_parent"
