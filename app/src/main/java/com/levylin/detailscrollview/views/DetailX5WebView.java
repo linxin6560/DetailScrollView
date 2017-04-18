@@ -7,8 +7,6 @@ import android.view.View;
 
 import com.levylin.detailscrollview.views.helper.WebViewTouchHelper;
 import com.levylin.detailscrollview.views.listener.OnScrollBarShowListener;
-import com.tencent.smtt.export.external.extension.interfaces.IX5WebViewClientExtension;
-import com.tencent.smtt.export.external.extension.proxy.X5ProxyWebViewClientExtension;
 import com.tencent.smtt.sdk.WebViewCallbackClient;
 
 /**
@@ -33,9 +31,7 @@ public class DetailX5WebView extends X5WebView implements IDetailWebView {
     protected void init() {
         getView().setVerticalScrollBarEnabled(false);
         getView().setOverScrollMode(OVER_SCROLL_NEVER);
-        if (getX5WebViewExtension() != null) {
-            initX5CoreWebView();
-        } else {
+        if (getX5WebViewExtension() == null) {
             initSystemCoreWebView();
         }
     }
@@ -47,7 +43,7 @@ public class DetailX5WebView extends X5WebView implements IDetailWebView {
         setWebViewCallbackClient(new WebViewCallbackClient() {
             @Override
             public boolean onTouchEvent(MotionEvent ev, View view) {
-                return !(mHelper != null && !mHelper.onTouchEvent(ev)) && super_onTouchEvent(ev);
+                return super_onTouchEvent(ev);
             }
 
             @Override
@@ -85,24 +81,6 @@ public class DetailX5WebView extends X5WebView implements IDetailWebView {
             @Override
             public void onScrollChanged(int i, int i1, int i2, int i3, View view) {
                 super_onScrollChanged(i, i1, i2, i3);
-            }
-        });
-    }
-
-    /**
-     * 初始化X5WebView
-     */
-    private void initX5CoreWebView() {
-        IX5WebViewClientExtension clientExtension = getWebViewClientExtension();
-        getX5WebViewExtension().setWebViewClientExtension(new X5ProxyWebViewClientExtension(clientExtension) {
-
-            @Override
-            public boolean onTouchEvent(MotionEvent ev, View view) {
-                if (mHelper == null)
-                    return super.onTouchEvent(ev, view);
-                if (mHelper.onTouchEvent(ev))
-                    return true;
-                return super.onTouchEvent(ev, view);
             }
         });
     }

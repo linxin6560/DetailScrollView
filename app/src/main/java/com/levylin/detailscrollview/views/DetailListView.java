@@ -102,8 +102,8 @@ public class DetailListView extends ListView implements IDetailListView, AbsList
     public boolean onTouchEvent(MotionEvent ev) {
         if (mHelper == null)
             return super.onTouchEvent(ev);
-        if (mHelper.onTouchEvent(ev))
-            return true;
+        if (!mHelper.onTouchEvent(ev))
+            return false;
         return super.onTouchEvent(ev);
     }
 

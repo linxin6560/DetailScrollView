@@ -34,7 +34,7 @@ public class DetailRecyclerView extends RecyclerView implements IDetailListView 
         init();
     }
 
-    private void init(){
+    private void init() {
         setOverScrollMode(OVER_SCROLL_NEVER);
     }
 
@@ -47,8 +47,8 @@ public class DetailRecyclerView extends RecyclerView implements IDetailListView 
     public boolean onTouchEvent(MotionEvent ev) {
         if (mHelper == null)
             return super.onTouchEvent(ev);
-        if (mHelper.onTouchEvent(ev))
-            return true;
+        if (!mHelper.onTouchEvent(ev))
+            return false;
         return super.onTouchEvent(ev);
     }
 

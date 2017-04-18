@@ -166,10 +166,10 @@ public class DetailScrollView extends ViewGroup {
         acquireVelocityTracker(event);
         switch (action) {
             case MotionEvent.ACTION_DOWN:
+                mLastY = y;
                 if (!mScroller.isFinished()) {//按下去的时候就要取消动画，在move的时候取消动画就太迟了，会造成已经进入webView滑动事件，同时触发MyScrollView的滚动事件的奇葩bug
                     mScroller.abortAnimation();
                 }
-                mLastY = y;
                 LogE(TAG + ".onTouchEvent.DOWN.......mLastY=" + mLastY);
                 break;
             case MotionEvent.ACTION_MOVE:
@@ -244,7 +244,7 @@ public class DetailScrollView extends ViewGroup {
                 if (deltaY < 0) { // Scroll To Bottom
                     if (touchInView((View) mWebView, ev)) {
                         // 第一个View不可以继续向下滚动，否则由这个View自己处理View内的滚动
-                        LogE("onInterceptTouchEvent.Move.......触摸点在第一个View...isCanScrollBottom=" + isCanScrollBottom);
+                        LogE("onInterceptTouchEvent.Move.......触摸点在WebView...isCanScrollBottom=" + isCanScrollBottom);
                         if (!mWebView.canScrollVertically(DIRECT_BOTTOM)) {
                             if (isCanScrollBottom) {
                                 mLastY = (int) ev.getY();
@@ -252,7 +252,7 @@ public class DetailScrollView extends ViewGroup {
                             }
                         }
                     } else if (touchInView((View) mListView, ev)) { // 触摸点在第二个View
-                        LogE("onInterceptTouchEvent.Move.......触摸点在第二个View...isCanScrollBottom=" + isCanScrollBottom);
+                        LogE("onInterceptTouchEvent.Move.......触摸点在ListView...isCanScrollBottom=" + isCanScrollBottom);
                         if (isCanScrollBottom) {
                             mIsBeingDragged = true;
                         }
@@ -262,12 +262,12 @@ public class DetailScrollView extends ViewGroup {
                     }
                 } else if (deltaY > 0) { // Scroll To Top
                     if (touchInView((View) mWebView, ev)) {
-                        LogE("onInterceptTouchEvent.Move.......触摸点在第一个View...isCanScrollTop=" + isCanScrollTop);
+                        LogE("onInterceptTouchEvent.Move.......触摸点在WebView...isCanScrollTop=" + isCanScrollTop);
                         if (isCanScrollTop) {
                             mIsBeingDragged = true;
                         }
                     } else if (touchInView((View) mListView, ev)) {
-                        LogE("onInterceptTouchEvent.Move.......触摸点在第二个View...isCanScrollTop=" + isCanScrollTop);
+                        LogE("onInterceptTouchEvent.Move.......触摸点在ListView...isCanScrollTop=" + isCanScrollTop);
                         if (!mListView.canScrollVertically(DIRECT_TOP)) {
                             if (isCanScrollTop) {
                                 mLastY = y;
@@ -313,7 +313,7 @@ public class DetailScrollView extends ViewGroup {
         if (delta + getScrollY() >= maxScrollY) {
             dy = maxScrollY - getScrollY();
         } else if (delta + getScrollY() <= 0) {
-            dy = 0;
+            dy = -getScrollY();
         } else {
             dy = delta;
         }
