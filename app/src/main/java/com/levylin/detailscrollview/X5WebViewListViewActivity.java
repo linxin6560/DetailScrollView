@@ -40,36 +40,12 @@ public class X5WebViewListViewActivity extends AppCompatActivity implements View
         webView = (DetailX5WebView) findViewById(R.id.test_webview);
         webView.loadUrl(longUrl);
 
-        findViewById(R.id.webview_content_long_btn).setOnClickListener(this);
-        findViewById(R.id.webview_content_short_btn).setOnClickListener(this);
-        findViewById(R.id.listview_content_long_btn).setOnClickListener(this);
-        findViewById(R.id.listview_content_short_btn).setOnClickListener(this);
         findViewById(R.id.move_to_list).setOnClickListener(this);
     }
 
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
-            case R.id.webview_content_long_btn:
-                webView.loadUrl(longUrl);
-                break;
-            case R.id.webview_content_short_btn:
-                webView.loadUrl(shortUrl);
-                break;
-            case R.id.listview_content_long_btn:
-                list.clear();
-                for (int i = 0; i < 20; i++) {
-                    list.add("测试:" + i);
-                }
-                adapter.notifyDataSetChanged();
-                break;
-            case R.id.listview_content_short_btn:
-                list.clear();
-                for (int i = 0; i < 5; i++) {
-                    list.add("测试:" + i);
-                }
-                adapter.notifyDataSetChanged();
-                break;
             case R.id.move_to_list:
                 mScrollView.scrollToListView();
                 break;

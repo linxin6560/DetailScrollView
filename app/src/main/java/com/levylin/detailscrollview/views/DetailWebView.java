@@ -2,7 +2,6 @@ package com.levylin.detailscrollview.views;
 
 import android.content.Context;
 import android.util.AttributeSet;
-import android.view.MotionEvent;
 import android.webkit.WebView;
 
 import com.levylin.detailscrollview.views.helper.WebViewTouchHelper;
@@ -38,26 +37,18 @@ public class DetailWebView extends WebView implements IDetailWebView {
     }
 
     @Override
-    public boolean onTouchEvent(MotionEvent ev) {
-        if (mHelper == null)
-            return super.onTouchEvent(ev);
-        if (!mHelper.onTouchEvent(ev))
-            return false;
-        return super.onTouchEvent(ev);
-    }
-
-    @Override
     public void customScrollBy(int dy) {
         scrollBy(0, dy);
     }
 
     @Override
     public void customScrollTo(int toY) {
-        scrollTo(0,toY);
+        scrollTo(0, toY);
     }
 
     @Override
     public void startFling(int vy) {
+        DetailScrollView.LogE("DetailWebView...startFling:" + (-vy));
         flingScroll(0, vy);
     }
 
@@ -83,13 +74,14 @@ public class DetailWebView extends WebView implements IDetailWebView {
 
     @Override
     protected boolean overScrollBy(int deltaX, int deltaY, int scrollX, int scrollY, int scrollRangeX, int scrollRangeY, int maxOverScrollX, int maxOverScrollY, boolean isTouchEvent) {
+        boolean b = super.overScrollBy(deltaX, deltaY, scrollX, scrollY, scrollRangeX, scrollRangeY, maxOverScrollX, maxOverScrollY, isTouchEvent);
         if (mScrollBarShowListener != null) {
             mScrollBarShowListener.onShow();
         }
         if (mHelper != null) {
             mHelper.overScrollBy(deltaY, scrollY, scrollRangeY);
         }
-        return super.overScrollBy(deltaX, deltaY, scrollX, scrollY, scrollRangeX, scrollRangeY, maxOverScrollX, maxOverScrollY, isTouchEvent);
+        return b;
     }
 }
 

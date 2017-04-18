@@ -10,6 +10,7 @@ import com.levylin.detailscrollview.views.DetailRecyclerView;
 import com.levylin.detailscrollview.views.DetailScrollView;
 
 /**
+ * 列表点击帮助类
  * Created by LinXin on 2017/3/31.
  */
 public class ListViewTouchHelper {
@@ -69,6 +70,7 @@ public class ListViewTouchHelper {
                 if (!canScrollVertically(DetailScrollView.DIRECT_TOP) && isDragged) {
                     mVelocityTracker.computeCurrentVelocity(1000, maxVelocity);
                     final float curVelocity = mVelocityTracker.getYVelocity(0);
+                    DetailScrollView.LogE("ListViewTouchHelper.onTouchEvent.ACTION_UP......ScrollView.fling:" + (-curVelocity));
                     mScrollView.fling(-(int) curVelocity);
                 }
                 mLastY = 0;

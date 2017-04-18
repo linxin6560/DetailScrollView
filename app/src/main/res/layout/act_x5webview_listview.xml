@@ -4,48 +4,6 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <RadioGroup
-        android:id="@+id/webview_content_rg"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:orientation="horizontal">
-
-        <RadioButton
-            android:id="@+id/webview_content_long_btn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:checked="true"
-            android:text="长网页" />
-
-        <RadioButton
-            android:id="@+id/webview_content_short_btn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="短网页" />
-    </RadioGroup>
-
-    <RadioGroup
-        android:id="@+id/listview_content_rg"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:orientation="horizontal">
-
-        <RadioButton
-            android:id="@+id/listview_content_long_btn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:checked="true"
-            android:text="长列表" />
-
-        <RadioButton
-            android:id="@+id/listview_content_short_btn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="短列表" />
-    </RadioGroup>
-
     <Button
         android:id="@+id/move_to_list"
         android:layout_width="match_parent"

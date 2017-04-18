@@ -13,6 +13,7 @@ import com.levylin.detailscrollview.views.DetailX5WebView;
 import java.util.LinkedList;
 
 /**
+ * WebView点击帮助类
  * Created by LinXin on 2017/3/31.
  */
 public class WebViewTouchHelper {
@@ -62,11 +63,15 @@ public class WebViewTouchHelper {
             for (SpeedItem speedItem : speedItems) {
                 totalDeltaY += speedItem.deltaY;
             }
-            int speed = ((int) (speedItems.getLast().time - speedItems.getFirst().time));
+            int totalTime = ((int) (speedItems.getLast().time - speedItems.getFirst().time));
             speedItems.clear();
-            if (speed > 0 && totalDeltaY != 0) {
-                speed = totalDeltaY / speed * 1000;
-                mScrollView.fling(speed);
+            if (totalTime > 0 && totalDeltaY != 0) {
+                int speed = totalDeltaY / totalTime * 1000;
+                boolean webViewCanScrollBottom = canScrollVertically(DetailScrollView.DIRECT_BOTTOM);
+                DetailScrollView.LogE("WebViewTouchHelper.overScrollBy......ScrollView.fling:" + (-speed) + ",webViewCanScrollBottom=" + webViewCanScrollBottom);
+                if (!webViewCanScrollBottom) {
+                    mScrollView.fling(speed);
+                }
             }
         }
     }
@@ -105,6 +110,7 @@ public class WebViewTouchHelper {
                 if (!canScrollVertically(DetailScrollView.DIRECT_BOTTOM) && isDragged) {
                     mVelocityTracker.computeCurrentVelocity(1000, mMaxVelocity);
                     final float curVelocity = mVelocityTracker.getYVelocity(0);
+                    DetailScrollView.LogE("WebViewTouchHelper.onTouchEvent.ACTION_UP......ScrollView.fling:" + (-curVelocity));
                     mScrollView.fling(-(int) curVelocity);
                 }
                 mLastY = 0;

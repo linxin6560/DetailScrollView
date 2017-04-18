@@ -175,7 +175,7 @@ public class DetailScrollView extends ViewGroup {
             case MotionEvent.ACTION_MOVE:
                 float delta = y - mLastY;
                 int dy = adjustScrollY((int) -delta);
-                LogE(TAG + ".onTouchEvent.Move.......dy=" + dy + ",delta=" + delta + ",y=" + y + ",mLastY=" + mLastY);
+                LogE(TAG + ".onTouchEvent.Move.......dy=" + dy + ",delta=" + delta + ",y=" + y + ",mLastY=" + mLastY + ",isAtBottom=" + isAtBottom + ",isAtTop=" + isAtTop + ",getScrollY()=" + getScrollY());
                 if (dy != 0) {
                     if (mListView.canScrollVertically(DIRECT_TOP) && isAtTop) {//因为ListView上滑操作导致ListView可以继续下滑，故要先ListView滑到顶部，再滑动MyScrollView
                         mListView.customScrollBy((int) -delta);
@@ -194,21 +194,27 @@ public class DetailScrollView extends ViewGroup {
                 mLastY = y;
                 break;
             case MotionEvent.ACTION_UP:
+            case MotionEvent.ACTION_CANCEL:
                 final VelocityTracker velocityTracker = mVelocityTracker;
                 velocityTracker.computeCurrentVelocity(1000);
-                int initialVelocity = (int) velocityTracker.getYVelocity(0);
-                if ((Math.abs(initialVelocity) > mMinimumVelocity)) {
-                    if (mListView.canScrollVertically(DIRECT_TOP) && isAtTop) {//因为ListView可以继续下滑，故先让丫的处理fling事件
-                        mListView.startFling(-initialVelocity);
-                    } else if (mWebView.canScrollVertically(DIRECT_BOTTOM) && isAtBottom) {//因为WebView可以继续上滑，故让丫的处理fling事件
-                        mWebView.startFling(-initialVelocity);
+                int yVelocity = (int) velocityTracker.getYVelocity(0);
+                LogE(TAG + ".onTouchEvent.ACTION_UP.......action=" + action + ",yVelocity=" + yVelocity + ",isAtBottom=" + isAtBottom + ",isAtTop=" + isAtTop + ",getScrollY()=" + getScrollY());
+                if ((Math.abs(yVelocity) > mMinimumVelocity)) {
+                    if (isAtTop) {//因为ListView可以继续下滑，故先让丫的处理fling事件
+                        if (mListView.canScrollVertically(DIRECT_TOP)) {
+                            LogE(TAG + ".onTouchEvent.ACTION_UP.......action=" + action + "listview fling:" + (-yVelocity));
+                            mListView.startFling(-yVelocity);
+                        }
+                    } else if (isAtBottom) {//因为WebView可以继续上滑，故让丫的处理fling事件
+                        if (mWebView.canScrollVertically(DIRECT_BOTTOM)) {
+                            LogE(TAG + ".onTouchEvent.ACTION_UP.......action=" + action + "webview fling:" + (-yVelocity));
+                            mWebView.startFling(-yVelocity);
+                        }
                     } else {//上面两个没有处理fling事件，才轮到MyScrollView去处理
-                        fling(-initialVelocity);
+                        LogE(TAG + ".onTouchEvent.ACTION_UP.......action=" + action + "scrollview fling:" + (-yVelocity));
+                        fling(-yVelocity);
                     }
                 }
-                releaseVelocityTracker();
-                break;
-            case MotionEvent.ACTION_CANCEL:
                 releaseVelocityTracker();
                 break;
         }
@@ -322,8 +328,15 @@ public class DetailScrollView extends ViewGroup {
     }
 
     public void fling(int velocity) {
-        LogE("fling...." + velocity + ",mScroller.isFinished()=" + mScroller.isFinished());
+        boolean webViewCanScrollBottom = mWebView.canScrollVertically(DIRECT_BOTTOM);
+        boolean listViewCanScrollTop = mListView.canScrollVertically(DIRECT_TOP);
+        LogE("ScrollView fling...." + velocity + ",mScroller.isFinished()=" + mScroller.isFinished() + "\n"
+                + "webViewCanScrollBottom=" + webViewCanScrollBottom + "\n"
+                + "listViewCanScrollTop=" + listViewCanScrollTop);
         if (!mScroller.isFinished())
+            return;
+        if ((webViewCanScrollBottom && velocity < 0)
+                || (listViewCanScrollTop && velocity > 0))//若WebView可以继续下滑或者ListView可以继续上滑，则ScrollView滑动取消
             return;
         int minY = -mWebView.customGetContentHeight();
         mScroller.fling(getScrollX(), getScrollY(), 0, velocity, 0, 0, minY, computeVerticalScrollRange());

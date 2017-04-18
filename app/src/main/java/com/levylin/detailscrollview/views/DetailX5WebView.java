@@ -49,13 +49,14 @@ public class DetailX5WebView extends X5WebView implements IDetailWebView {
             @Override
             public boolean overScrollBy(int deltaX, int deltaY, int scrollX, int scrollY, int scrollRangeX, int scrollRangeY, int maxOverScrollX, int maxOverScrollY, boolean isTouchEvent, View view) {
                 //系统内核显示进度条和计算速度走这边
+                boolean b = super_overScrollBy(deltaX, deltaY, scrollX, scrollY, scrollRangeX, scrollRangeY, maxOverScrollX, maxOverScrollY, isTouchEvent);
                 if (mScrollBarShowListener != null) {
                     mScrollBarShowListener.onShow();
                 }
                 if (mHelper != null) {
                     mHelper.overScrollBy(deltaY, scrollY, scrollRangeY);
                 }
-                return super_overScrollBy(deltaX, deltaY, scrollX, scrollY, scrollRangeX, scrollRangeY, maxOverScrollX, maxOverScrollY, isTouchEvent);
+                return b;
             }
 
             @Override
@@ -116,6 +117,7 @@ public class DetailX5WebView extends X5WebView implements IDetailWebView {
 
     @Override
     public void startFling(int vy) {
+        DetailScrollView.LogE("DetailX5WebView...startFling:" + (-vy));
         flingScroll(0, vy);
     }
 
