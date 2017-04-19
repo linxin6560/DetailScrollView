@@ -340,18 +340,12 @@ public class DetailScrollView extends ViewGroup {
     }
 
     public void fling(int velocity) {
-        boolean webViewCanScrollBottom = mWebView.canScrollVertically(DIRECT_BOTTOM);
-        boolean listViewCanScrollTop = mListView.canScrollVertically(DIRECT_TOP);
-        LogE("ScrollView fling...." + velocity + ",mScroller.isFinished()=" + mScroller.isFinished() + "\n"
-                + "webViewCanScrollBottom=" + webViewCanScrollBottom + "\n"
-                + "listViewCanScrollTop=" + listViewCanScrollTop + "\n"
+        LogE("ScrollView fling...." + velocity + "\n"
+                + ",mScroller.isFinished()=" + mScroller.isFinished() + "\n"
                 + "isTouched=" + isTouched);
         if (isTouched)//当webview不能继续向下滑的时候，继续下拉会触发scrollView下滑，此时webview不能再响应dispatchTouchEvent事件，scrollView响应onTouch事件，然后由scrollView去判断是否是isTouched
             return;
         if (!mScroller.isFinished())
-            return;
-        if ((webViewCanScrollBottom && velocity < 0)
-                || (listViewCanScrollTop && velocity > 0))//若WebView可以继续下滑或者ListView可以继续上滑，则ScrollView滑动取消
             return;
         int minY = -mWebView.customGetContentHeight();
         LogE("ScrollView do fling...." + velocity);
