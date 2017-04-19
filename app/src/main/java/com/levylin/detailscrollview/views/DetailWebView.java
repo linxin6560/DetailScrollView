@@ -2,6 +2,7 @@ package com.levylin.detailscrollview.views;
 
 import android.content.Context;
 import android.util.AttributeSet;
+import android.view.MotionEvent;
 import android.webkit.WebView;
 
 import com.levylin.detailscrollview.views.helper.WebViewTouchHelper;
@@ -34,6 +35,13 @@ public class DetailWebView extends WebView implements IDetailWebView {
 
     public void setScrollView(DetailScrollView scrollView) {
         mHelper = new WebViewTouchHelper(scrollView, this);
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent ev) {
+        if (mHelper == null)
+            return super.onTouchEvent(ev);
+        return mHelper.onTouchEvent(ev) && super.onTouchEvent(ev);
     }
 
     @Override
@@ -79,7 +87,7 @@ public class DetailWebView extends WebView implements IDetailWebView {
             mScrollBarShowListener.onShow();
         }
         if (mHelper != null) {
-            mHelper.overScrollBy(deltaY, scrollY, scrollRangeY);
+            mHelper.overScrollBy(deltaY, scrollY, scrollRangeY, isTouchEvent);
         }
         return b;
     }

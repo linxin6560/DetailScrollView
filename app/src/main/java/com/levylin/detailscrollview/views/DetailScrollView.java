@@ -37,7 +37,8 @@ public class DetailScrollView extends ViewGroup {
     private VelocityTracker mVelocityTracker;
     private int mMinimumVelocity;
     private int maxScrollY;
-    private boolean mIsBeingDragged;
+    private boolean isBeingDragged;
+    private boolean isTouched;
     private MyScrollBarShowListener listener;
 
     private int oldScrollY;
@@ -160,6 +161,7 @@ public class DetailScrollView extends ViewGroup {
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         int action = event.getAction();
+        isTouched = action == MotionEvent.ACTION_DOWN || action == MotionEvent.ACTION_MOVE;
         float y = event.getY();
         boolean isAtTop = getScrollY() >= maxScrollY;//MyScroll是否在头部
         boolean isAtBottom = getScrollY() <= 0;//MyScroll是否在底部
@@ -175,7 +177,13 @@ public class DetailScrollView extends ViewGroup {
             case MotionEvent.ACTION_MOVE:
                 float delta = y - mLastY;
                 int dy = adjustScrollY((int) -delta);
-                LogE(TAG + ".onTouchEvent.Move.......dy=" + dy + ",delta=" + delta + ",y=" + y + ",mLastY=" + mLastY + ",isAtBottom=" + isAtBottom + ",isAtTop=" + isAtTop + ",getScrollY()=" + getScrollY());
+                LogE(TAG + ".onTouchEvent.Move.......dy=" + dy + "\n"
+                        + ",delta=" + delta + "\n"
+                        + ",y=" + y + "\n"
+                        + ",mLastY=" + mLastY + "\n"
+                        + ",isAtBottom=" + isAtBottom + "\n"
+                        + ",isAtTop=" + isAtTop + "\n"
+                        + ",getScrollY()=" + getScrollY());
                 if (dy != 0) {
                     if (mListView.canScrollVertically(DIRECT_TOP) && isAtTop) {//因为ListView上滑操作导致ListView可以继续下滑，故要先ListView滑到顶部，再滑动MyScrollView
                         mListView.customScrollBy((int) -delta);
@@ -198,7 +206,11 @@ public class DetailScrollView extends ViewGroup {
                 final VelocityTracker velocityTracker = mVelocityTracker;
                 velocityTracker.computeCurrentVelocity(1000);
                 int yVelocity = (int) velocityTracker.getYVelocity(0);
-                LogE(TAG + ".onTouchEvent.ACTION_UP.......action=" + action + ",yVelocity=" + yVelocity + ",isAtBottom=" + isAtBottom + ",isAtTop=" + isAtTop + ",getScrollY()=" + getScrollY());
+                LogE(TAG + ".onTouchEvent.ACTION_UP.......action=" + action + "\n"
+                        + ",yVelocity=" + yVelocity + "\n"
+                        + ",isAtBottom=" + isAtBottom + "\n"
+                        + ",isAtTop=" + isAtTop + "\n"
+                        + ",getScrollY()=" + getScrollY());
                 if ((Math.abs(yVelocity) > mMinimumVelocity)) {
                     if (isAtTop) {//因为ListView可以继续下滑，故先让丫的处理fling事件
                         if (mListView.canScrollVertically(DIRECT_TOP)) {
@@ -232,15 +244,20 @@ public class DetailScrollView extends ViewGroup {
         }
         boolean isCanScrollBottom = getScrollY() < maxScrollY && mScroller.isFinished();//是否可以向下滑
         boolean isCanScrollTop = getScrollY() > 0 && mScroller.isFinished();//是否可以向上滑
-        LogE("onInterceptTouchEvent.getScrollY=" + getScrollY() + ",maxScrollY=" + maxScrollY + ",mScroller.isFinished()=" + mScroller.isFinished() + ",isCanScrollBottom=" + isCanScrollBottom + ",isCanScrollTop=" + isCanScrollTop);
+        boolean isWebViewCanScrollBottom = mWebView.canScrollVertically(DIRECT_BOTTOM);//Web可否继续下滑
+        boolean isListViewCanScrollTop = mListView.canScrollVertically(DIRECT_TOP);//ListView可否继续上滑
+        LogE("onInterceptTouchEvent.getScrollY=" + getScrollY() + "\n"
+                + ",maxScrollY=" + maxScrollY + "\n"
+                + ",mScroller.isFinished()=" + mScroller.isFinished() + "\n"
+                + ",isCanScrollBottom=" + isCanScrollBottom + "\n"
+                + ",isCanScrollTop=" + isCanScrollTop);
         final int action = ev.getAction();
         acquireVelocityTracker(ev);
         switch (action & MotionEvent.ACTION_MASK) {
             case MotionEvent.ACTION_DOWN: {
-                int y = (int) ev.getY();
-                mLastY = y;
+                mLastY = (int) ev.getY();
                 // 在Fling状态下点击屏幕
-                mIsBeingDragged = !mScroller.isFinished();
+                isBeingDragged = !mScroller.isFinished();
                 break;
             }
             case MotionEvent.ACTION_MOVE: {
@@ -249,52 +266,47 @@ public class DetailScrollView extends ViewGroup {
                 LogE("onInterceptTouchEvent.Move.......deltaY=" + deltaY);
                 if (deltaY < 0) { // Scroll To Bottom
                     if (touchInView((View) mWebView, ev)) {
-                        // 第一个View不可以继续向下滚动，否则由这个View自己处理View内的滚动
-                        LogE("onInterceptTouchEvent.Move.......触摸点在WebView...isCanScrollBottom=" + isCanScrollBottom);
-                        if (!mWebView.canScrollVertically(DIRECT_BOTTOM)) {
-                            if (isCanScrollBottom) {
-                                mLastY = (int) ev.getY();
-                                mIsBeingDragged = true;
-                            }
-                        }
+                        isBeingDragged = !isWebViewCanScrollBottom && isCanScrollBottom;// WebView不可以继续向下滚动，否则由这个WebView自己处理滚动
+                        LogE("onInterceptTouchEvent.Move.......触摸点在WebView...deltaY=" + deltaY + "\n"
+                                + ",isCanScrollBottom=" + isCanScrollBottom + "\n"
+                                + ",mIsBeingDragged=" + isBeingDragged + "\n"
+                                + ",isWebViewCanScrollBottom=" + isWebViewCanScrollBottom);
                     } else if (touchInView((View) mListView, ev)) { // 触摸点在第二个View
-                        LogE("onInterceptTouchEvent.Move.......触摸点在ListView...isCanScrollBottom=" + isCanScrollBottom);
-                        if (isCanScrollBottom) {
-                            mIsBeingDragged = true;
-                        }
+                        isBeingDragged = isCanScrollBottom;
+                        LogE("onInterceptTouchEvent.Move.......触摸点在ListView...deltaY=" + deltaY + "\n"
+                                + ",isCanScrollBottom=" + isCanScrollBottom + "\n"
+                                + ",mIsBeingDragged=" + isBeingDragged);
                     } else {
-                        mIsBeingDragged = false;
-                        mLastY = y;
+                        isBeingDragged = false;
                     }
                 } else if (deltaY > 0) { // Scroll To Top
                     if (touchInView((View) mWebView, ev)) {
-                        LogE("onInterceptTouchEvent.Move.......触摸点在WebView...isCanScrollTop=" + isCanScrollTop);
-                        if (isCanScrollTop) {
-                            mIsBeingDragged = true;
-                        }
+                        isBeingDragged = isCanScrollTop;
+                        LogE("onInterceptTouchEvent.Move.......触摸点在WebView...deltaY=" + deltaY + "\n"
+                                + ",isCanScrollTop=" + isCanScrollTop + "\n"
+                                + ",mIsBeingDragged=" + isBeingDragged);
                     } else if (touchInView((View) mListView, ev)) {
-                        LogE("onInterceptTouchEvent.Move.......触摸点在ListView...isCanScrollTop=" + isCanScrollTop);
-                        if (!mListView.canScrollVertically(DIRECT_TOP)) {
-                            if (isCanScrollTop) {
-                                mLastY = y;
-                                mIsBeingDragged = true;
-                            }
-                        }
+                        isBeingDragged = isCanScrollTop && !isListViewCanScrollTop;// ListView不可以继续向上滚动，否则由这个ListView自己处理滚动
+                        LogE("onInterceptTouchEvent.Move.......触摸点在ListView...deltaY=" + deltaY + "\n"
+                                + ",isCanScrollTop=" + isCanScrollTop + "\n"
+                                + ",mIsBeingDragged=" + isBeingDragged + "\n"
+                                + ",isListViewCanScrollTop=" + isListViewCanScrollTop);
                     } else {
-                        mIsBeingDragged = false;
+                        isBeingDragged = false;
                     }
                 }
+                mLastY = y;
                 break;
             }
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_CANCEL: {
-                mIsBeingDragged = false;
+                isBeingDragged = false;
                 releaseVelocityTracker();
                 break;
             }
         }
-        LogE("onInterceptTouchEvent........mIsBeingDragged=" + mIsBeingDragged + "," + ev.getAction());
-        return mIsBeingDragged;
+        LogE("onInterceptTouchEvent........mIsBeingDragged=" + isBeingDragged + "," + ev.getAction());
+        return isBeingDragged;
     }
 
     public void customScrollBy(int dy) {
@@ -332,13 +344,17 @@ public class DetailScrollView extends ViewGroup {
         boolean listViewCanScrollTop = mListView.canScrollVertically(DIRECT_TOP);
         LogE("ScrollView fling...." + velocity + ",mScroller.isFinished()=" + mScroller.isFinished() + "\n"
                 + "webViewCanScrollBottom=" + webViewCanScrollBottom + "\n"
-                + "listViewCanScrollTop=" + listViewCanScrollTop);
+                + "listViewCanScrollTop=" + listViewCanScrollTop + "\n"
+                + "isTouched=" + isTouched);
+        if (isTouched)//当webview不能继续向下滑的时候，继续下拉会触发scrollView下滑，此时webview不能再响应dispatchTouchEvent事件，scrollView响应onTouch事件，然后由scrollView去判断是否是isTouched
+            return;
         if (!mScroller.isFinished())
             return;
         if ((webViewCanScrollBottom && velocity < 0)
                 || (listViewCanScrollTop && velocity > 0))//若WebView可以继续下滑或者ListView可以继续上滑，则ScrollView滑动取消
             return;
         int minY = -mWebView.customGetContentHeight();
+        LogE("ScrollView do fling...." + velocity);
         mScroller.fling(getScrollX(), getScrollY(), 0, velocity, 0, 0, minY, computeVerticalScrollRange());
         ViewCompat.postInvalidateOnAnimation(this);
     }

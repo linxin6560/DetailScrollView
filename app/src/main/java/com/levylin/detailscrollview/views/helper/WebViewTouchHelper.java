@@ -52,7 +52,7 @@ public class WebViewTouchHelper {
      * @param scrollY
      * @param scrollRangeY
      */
-    public void overScrollBy(int deltaY, int scrollY, int scrollRangeY) {
+    public void overScrollBy(int deltaY, int scrollY, int scrollRangeY, boolean isTouched) {
         if (speedItems.size() >= 10) {
             speedItems.removeFirst();
         }
@@ -68,8 +68,10 @@ public class WebViewTouchHelper {
             if (totalTime > 0 && totalDeltaY != 0) {
                 int speed = totalDeltaY / totalTime * 1000;
                 boolean webViewCanScrollBottom = canScrollVertically(DetailScrollView.DIRECT_BOTTOM);
-                DetailScrollView.LogE("WebViewTouchHelper.overScrollBy......ScrollView.fling:" + (-speed) + ",webViewCanScrollBottom=" + webViewCanScrollBottom);
-                if (!webViewCanScrollBottom) {
+                DetailScrollView.LogE("WebViewTouchHelper.overScrollBy......ScrollView.fling:" + (-speed) + "\n"
+                        + ",webViewCanScrollBottom=" + webViewCanScrollBottom + "\n"
+                        + ",isTouched=" + isTouched);
+                if (!webViewCanScrollBottom && !isTouched) {//必须是在非点击状态下才触发scrollview的fling事件，否则会造成scrollview和webview同时滑动的问题
                     mScrollView.fling(speed);
                 }
             }
@@ -115,6 +117,9 @@ public class WebViewTouchHelper {
                 }
                 mLastY = 0;
                 isDragged = false;
+                releaseVelocityTracker();
+                break;
+            case MotionEvent.ACTION_CANCEL:
                 releaseVelocityTracker();
                 break;
         }

@@ -17,6 +17,7 @@ public class DetailX5WebView extends X5WebView implements IDetailWebView {
 
     private WebViewTouchHelper mHelper;
     private OnScrollBarShowListener mScrollBarShowListener;
+    private boolean isTouched = false;
 
     public DetailX5WebView(Context context) {
         super(context);
@@ -54,7 +55,7 @@ public class DetailX5WebView extends X5WebView implements IDetailWebView {
                     mScrollBarShowListener.onShow();
                 }
                 if (mHelper != null) {
-                    mHelper.overScrollBy(deltaY, scrollY, scrollRangeY);
+                    mHelper.overScrollBy(deltaY, scrollY, scrollRangeY, isTouchEvent);
                 }
                 return b;
             }
@@ -87,6 +88,12 @@ public class DetailX5WebView extends X5WebView implements IDetailWebView {
     }
 
     @Override
+    public boolean dispatchTouchEvent(MotionEvent ev) {
+        isTouched = ev.getAction() == MotionEvent.ACTION_DOWN || ev.getAction() == MotionEvent.ACTION_MOVE;
+        return super.dispatchTouchEvent(ev);
+    }
+
+    @Override
     protected void onScrollChanged(int l, int t, int oldl, int oldt) {
         super.onScrollChanged(l, t, oldl, oldt);
         //X5内核的显示进度条和计算速度走这边
@@ -96,7 +103,7 @@ public class DetailX5WebView extends X5WebView implements IDetailWebView {
         int deltaY = t - oldt;
         int height = getHeight() - getPaddingTop() - getPaddingBottom();
         if (mHelper != null) {
-            mHelper.overScrollBy(deltaY, oldt, computeVerticalScrollRange() - height);//计算速度
+            mHelper.overScrollBy(deltaY, oldt, computeVerticalScrollRange() - height, isTouched);//计算速度
         }
     }
 
