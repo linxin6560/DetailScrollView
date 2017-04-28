@@ -16,6 +16,7 @@ import android.widget.Scroller;
 import com.levylin.detailscrollview.R;
 import com.levylin.detailscrollview.views.listener.OnScrollBarShowListener;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 /**
@@ -39,7 +40,7 @@ public class DetailScrollView extends ViewGroup {
     private int maxScrollY;
     private boolean isBeingDragged;
     private boolean isTouched;
-    private MyScrollBarShowListener listener;
+    private MyScrollBarShowListener mScrollBarShowListener;
 
     private int oldScrollY;
     private int oldWebViewScrollY;
@@ -60,23 +61,38 @@ public class DetailScrollView extends ViewGroup {
     }
 
     private void init(Context context) {
-        setVerticalScrollBarEnabled(true);
-        setScrollbarFadingEnabled(true);
-        setWillNotDraw(false);//awakenScrollBars的时候会调用invalidate，设置这个为false，可以使invalidate调用draw方法，从而达到画进度条
         mScroller = new Scroller(context);
         final ViewConfiguration configuration = ViewConfiguration.get(getContext());
         mMinimumVelocity = configuration.getScaledMinimumFlingVelocity();
-        listener = new MyScrollBarShowListener();
+        mScrollBarShowListener = new MyScrollBarShowListener();
 
+        //初始化滚动条
+        boolean hasScrollBarVerticalThumb = false;
         try {
-            //显示滚动条
             TypedArray a = context.obtainStyledAttributes(R.styleable.View);
             Method method = View.class.getDeclaredMethod("initializeScrollbars", TypedArray.class);
             method.setAccessible(true);
             method.invoke(this, a);
             a.recycle();
+            Field field = View.class.getDeclaredField("mScrollCache");
+            field.setAccessible(true);
+            Object mScrollCache = field.get(this);
+            if (mScrollCache != null) {
+                Field scrollbarField = mScrollCache.getClass().getDeclaredField("scrollBar");
+                scrollbarField.setAccessible(true);
+                Object scrollBar = scrollbarField.get(mScrollCache);
+                Field verticalThumbField = scrollBar.getClass().getDeclaredField("mVerticalThumb");
+                verticalThumbField.setAccessible(true);
+                Object verticalThumb = verticalThumbField.get(scrollBar);
+                hasScrollBarVerticalThumb = verticalThumb != null;//有滚动条才显示滚动条
+            }
         } catch (Exception e) {
             e.printStackTrace();
+        }
+        if (hasScrollBarVerticalThumb) {
+            setVerticalScrollBarEnabled(true);
+            setScrollbarFadingEnabled(true);
+            setWillNotDraw(false);//awakenScrollBars的时候会调用invalidate，设置这个为false，可以使invalidate调用draw方法，从而达到画进度条
         }
     }
 
@@ -93,11 +109,11 @@ public class DetailScrollView extends ViewGroup {
         }
         if (mListView != null) {
             mListView.setScrollView(this);
-            mListView.setOnScrollBarShowListener(listener);
+            mListView.setOnScrollBarShowListener(mScrollBarShowListener);
         }
         if (mWebView != null) {
             mWebView.setScrollView(this);
-            mWebView.setOnScrollBarShowListener(listener);
+            mWebView.setOnScrollBarShowListener(mScrollBarShowListener);
         }
     }
 
@@ -479,7 +495,7 @@ public class DetailScrollView extends ViewGroup {
     /**
      * 跳转到列表区域，如果已经在列表区域，则跳回去，如果滚动动画没有结束，则无响应
      */
-    public void scrollToListView() {
+    public void toggleScrollToListView() {
         if (!mScroller.isFinished()) {
             return;
         }
@@ -488,7 +504,7 @@ public class DetailScrollView extends ViewGroup {
         int dy;
         int webViewToY;
         int scrollY = getScrollY();
-        if (scrollY >= maxScrollY) {
+        if (scrollY >= maxScrollY) {//不是toggle模式才回到原来的位置
             dy = oldScrollY - maxScrollY;
             webViewToY = oldWebViewScrollY;
         } else {
@@ -500,6 +516,30 @@ public class DetailScrollView extends ViewGroup {
         mListView.scrollToFirst();
         mWebView.customScrollTo(webViewToY);
         mScroller.startScroll(getScrollX(), getScrollY(), 0, dy);
+        ViewCompat.postInvalidateOnAnimation(this);
+    }
+
+    /**
+     * 强制滑动列表区域
+     */
+    public void forceScrollToListView() {
+        int dy = maxScrollY - getScrollY();
+        View webView = (View) mWebView;
+        int webHeight = webView.getHeight() - webView.getPaddingTop() - webView.getPaddingBottom();
+        int webViewToY = mWebView.customComputeVerticalScrollRange() - webHeight;
+        mListView.scrollToFirst();
+        mWebView.customScrollTo(webViewToY);
+        mScroller.startScroll(getScrollX(), getScrollY(), 0, dy);
+        ViewCompat.postInvalidateOnAnimation(this);
+    }
+
+    /**
+     * 回到顶部
+     */
+    public void scrollToTop() {
+        mWebView.customScrollTo(0);
+        mScroller.startScroll(getScrollX(), getScrollY(), 0, -getScrollY());
+        mListView.scrollToFirst();
         ViewCompat.postInvalidateOnAnimation(this);
     }
 
