@@ -52,7 +52,7 @@ public class WebViewRecyclerViewActivity extends AppCompatActivity implements Vi
     public void onClick(View v) {
         switch (v.getId()){
             case R.id.move_to_list:
-                mScrollView.scrollToListView();
+                mScrollView.toggleScrollToListView();
                 break;
         }
     }

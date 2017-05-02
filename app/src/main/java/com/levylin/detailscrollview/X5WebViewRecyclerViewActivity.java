@@ -47,7 +47,7 @@ public class X5WebViewRecyclerViewActivity extends AppCompatActivity implements 
     public void onClick(View v) {
         switch (v.getId()){
             case R.id.move_to_list:
-                mScrollView.scrollToListView();
+                mScrollView.toggleScrollToListView();
                 break;
         }
     }
