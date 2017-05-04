@@ -47,6 +47,7 @@ public class DetailScrollView extends ViewGroup {
 
     private int oldScrollY;
     private int oldWebViewScrollY;
+    private int mTouchSlop;
 
     public DetailScrollView(Context context) {
         super(context);
@@ -67,6 +68,7 @@ public class DetailScrollView extends ViewGroup {
         mScroller = new Scroller(context);
         final ViewConfiguration configuration = ViewConfiguration.get(getContext());
         mMinimumVelocity = configuration.getScaledMinimumFlingVelocity();
+        mTouchSlop = configuration.getScaledTouchSlop();
         mScrollBarShowListener = new MyScrollBarShowListener();
 
         //初始化滚动条
@@ -312,7 +314,9 @@ public class DetailScrollView extends ViewGroup {
             case MotionEvent.ACTION_MOVE: {
                 int y = (int) ev.getY();
                 int deltaY = (int) (y - mLastY);
-                LogE("onInterceptTouchEvent.Move.......deltaY=" + deltaY);
+                LogE("onInterceptTouchEvent.Move.......deltaY=" + deltaY + ",mTouchSlop=" + mTouchSlop);
+                if (Math.abs(deltaY) < mTouchSlop)
+                    return false;
                 if (deltaY < 0) { // Scroll To Bottom
                     if (touchInView((View) mWebView, ev)) {
                         isBeingDragged = !isWebViewCanScrollBottom && isCanScrollBottom;// WebView不可以继续向下滚动，否则由这个WebView自己处理滚动
