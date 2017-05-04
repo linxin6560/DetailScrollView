@@ -2,6 +2,7 @@ package com.levylin.detailscrollview.views;
 
 import android.content.Context;
 import android.content.res.TypedArray;
+import android.graphics.Rect;
 import android.support.v4.view.ViewCompat;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -10,11 +11,13 @@ import android.view.VelocityTracker;
 import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.view.animation.AnimationUtils;
 import android.widget.Scroller;
 
 import com.levylin.detailscrollview.R;
 import com.levylin.detailscrollview.views.listener.OnScrollBarShowListener;
+import com.tencent.smtt.sdk.WebView;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -67,7 +70,7 @@ public class DetailScrollView extends ViewGroup {
         mScrollBarShowListener = new MyScrollBarShowListener();
 
         //初始化滚动条
-        boolean hasScrollBarVerticalThumb = false;
+        boolean hasScrollBarVerticalThumb = false;//有的手机没有滚动条，开启滚动条的话会崩溃
         try {
             TypedArray a = context.obtainStyledAttributes(R.styleable.View);
             Method method = View.class.getDeclaredMethod("initializeScrollbars", TypedArray.class);
@@ -114,6 +117,40 @@ public class DetailScrollView extends ViewGroup {
         if (mWebView != null) {
             mWebView.setScrollView(this);
             mWebView.setOnScrollBarShowListener(mScrollBarShowListener);
+            observeWebViewContentHeightChange();
+        }
+    }
+
+    /**
+     * 监听webView内容高度发送变化
+     * 做法是如果webView的底部已经不在scrollview的底部，则把webView扩展至底部与scrollview重合
+     * 反之则不处理
+     */
+    private void observeWebViewContentHeightChange() {
+        if (mWebView instanceof DetailX5WebView) {
+            View view = ((DetailX5WebView) mWebView).getView();
+            view.getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
+
+                private int mOldWebViewContentHeight;
+                private Rect outRect = new Rect();
+
+                @Override
+                public boolean onPreDraw() {
+                    WebView webView = (WebView) mWebView;
+                    webView.getGlobalVisibleRect(outRect);
+                    int distBottom = DetailScrollView.this.getHeight() - outRect.height();
+                    if (distBottom <= 0)
+                        return true;
+                    int newWebViewContentHeight = webView.getContentHeight();
+                    if (mOldWebViewContentHeight == newWebViewContentHeight)
+                        return true;
+                    mOldWebViewContentHeight = newWebViewContentHeight;
+                    ViewGroup.LayoutParams lp = webView.getLayoutParams();
+                    lp.height = webView.getMeasuredHeight() + distBottom;
+                    webView.setLayoutParams(lp);
+                    return true;
+                }
+            });
         }
     }
 
@@ -152,15 +189,11 @@ public class DetailScrollView extends ViewGroup {
                 }
             }
         }
-        if (webHeight + listHeight + otherHeight <= parentHeight) {//总高度小于父容器高度
+
+        //简化最大可滑动区域的计算方式
+        maxScrollY = webHeight + listHeight + otherHeight - parentHeight;
+        if (maxScrollY < 0) {
             maxScrollY = 0;
-        } else if (webHeight < parentHeight && listHeight < parentHeight) {//网页高度和列表高度都小于父容器高度
-            maxScrollY = webHeight + otherHeight + listHeight - parentHeight;
-        } else if (webHeight + otherHeight < parentHeight) {//网页高度+其他高度<父容器高度，列表高度>=父容易高度，MyScrollView最多滑动到列表顶部与父容器的顶部重合
-            //所以可滑动的距离为网页高度+其他高度
-            maxScrollY = webHeight + otherHeight;
-        } else {//其他情况，要让MyScrollView最多滑动到列表底部与父容器底部重合,所以可滑动的距离为列表的高度+其他高度
-            maxScrollY = listHeight + otherHeight;
         }
     }
 
@@ -230,16 +263,16 @@ public class DetailScrollView extends ViewGroup {
                 if ((Math.abs(yVelocity) > mMinimumVelocity)) {
                     if (isAtTop) {//因为ListView可以继续下滑，故先让丫的处理fling事件
                         if (mListView.canScrollVertically(DIRECT_TOP)) {
-                            LogE(TAG + ".onTouchEvent.ACTION_UP.......action=" + action + "listview fling:" + (-yVelocity));
+                            LogE(TAG + ".onTouchEvent.ACTION_UP.......action=" + action + ",listview fling:" + (-yVelocity));
                             mListView.startFling(-yVelocity);
                         }
                     } else if (isAtBottom) {//因为WebView可以继续上滑，故让丫的处理fling事件
                         if (mWebView.canScrollVertically(DIRECT_BOTTOM)) {
-                            LogE(TAG + ".onTouchEvent.ACTION_UP.......action=" + action + "webview fling:" + (-yVelocity));
+                            LogE(TAG + ".onTouchEvent.ACTION_UP.......action=" + action + ",webview fling:" + (-yVelocity));
                             mWebView.startFling(-yVelocity);
                         }
                     } else {//上面两个没有处理fling事件，才轮到MyScrollView去处理
-                        LogE(TAG + ".onTouchEvent.ACTION_UP.......action=" + action + "scrollview fling:" + (-yVelocity));
+                        LogE(TAG + ".onTouchEvent.ACTION_UP.......action=" + action + ",scrollview fling:" + (-yVelocity));
                         fling(-yVelocity);
                     }
                 }
@@ -284,9 +317,9 @@ public class DetailScrollView extends ViewGroup {
                     if (touchInView((View) mWebView, ev)) {
                         isBeingDragged = !isWebViewCanScrollBottom && isCanScrollBottom;// WebView不可以继续向下滚动，否则由这个WebView自己处理滚动
                         LogE("onInterceptTouchEvent.Move.......触摸点在WebView...deltaY=" + deltaY + "\n"
+                                + ",isWebViewCanScrollBottom=" + isWebViewCanScrollBottom + "\n"
                                 + ",isCanScrollBottom=" + isCanScrollBottom + "\n"
-                                + ",mIsBeingDragged=" + isBeingDragged + "\n"
-                                + ",isWebViewCanScrollBottom=" + isWebViewCanScrollBottom);
+                                + ",mIsBeingDragged=" + isBeingDragged);
                     } else if (touchInView((View) mListView, ev)) { // 触摸点在第二个View
                         isBeingDragged = isCanScrollBottom;
                         LogE("onInterceptTouchEvent.Move.......触摸点在ListView...deltaY=" + deltaY + "\n"
@@ -304,9 +337,9 @@ public class DetailScrollView extends ViewGroup {
                     } else if (touchInView((View) mListView, ev)) {
                         isBeingDragged = isCanScrollTop && !isListViewCanScrollTop;// ListView不可以继续向上滚动，否则由这个ListView自己处理滚动
                         LogE("onInterceptTouchEvent.Move.......触摸点在ListView...deltaY=" + deltaY + "\n"
-                                + ",isCanScrollTop=" + isCanScrollTop + "\n"
-                                + ",mIsBeingDragged=" + isBeingDragged + "\n"
-                                + ",isListViewCanScrollTop=" + isListViewCanScrollTop);
+                                + ",isListViewCanScrollTop=" + isListViewCanScrollTop + "\n"
+                                + ",isCanScrollTop=" + isCanScrollTop
+                                + ",mIsBeingDragged=" + isBeingDragged + "\n");
                     } else {
                         isBeingDragged = false;
                     }
