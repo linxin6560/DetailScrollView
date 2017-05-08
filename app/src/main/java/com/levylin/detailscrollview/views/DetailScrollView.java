@@ -141,7 +141,9 @@ public class DetailScrollView extends ViewGroup {
                     WebView webView = (WebView) mWebView;
                     webView.getGlobalVisibleRect(outRect);
                     int distBottom = DetailScrollView.this.getHeight() - outRect.height();
-                    if (distBottom <= 0)
+                    if (distBottom <= 0
+                            || DetailScrollView.this.getScrollY() == 0//没触发滑动的时候不扩展
+                            || webView.getHeight() < DetailScrollView.this.getHeight())//webView本身高度就小于scrollview，也不扩展
                         return true;
                     int newWebViewContentHeight = webView.getContentHeight();
                     if (mOldWebViewContentHeight == newWebViewContentHeight)
@@ -174,7 +176,11 @@ public class DetailScrollView extends ViewGroup {
                 final MarginLayoutParams lp = (MarginLayoutParams) child.getLayoutParams();
 
                 final int width = child.getMeasuredWidth();
-                final int height = child.getMeasuredHeight();
+                int height = child.getMeasuredHeight();
+
+                if (height == 0) {
+                    height = parentHeight;//默认webView高度等于scrollview高度
+                }
 
                 int childLeft = parentLeft + lp.leftMargin;
                 int childTop = lastBottom + lp.topMargin;
