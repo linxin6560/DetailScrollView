@@ -49,6 +49,9 @@ public class ListViewTouchHelper {
                 break;
             case MotionEvent.ACTION_MOVE:
                 float nowY = ev.getRawY();
+                if(mLastY == 0){
+                    mLastY = nowY;
+                }
                 float deltaY = nowY - mLastY;
                 int dy = mScrollView.adjustScrollY((int) -deltaY);
                 mLastY = nowY;
