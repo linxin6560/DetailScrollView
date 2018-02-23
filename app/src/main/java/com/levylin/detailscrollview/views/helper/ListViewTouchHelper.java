@@ -22,6 +22,7 @@ public class ListViewTouchHelper {
     private DetailListView mListView;
     private DetailRecyclerView mRecyclerView;
     private int maxVelocity;
+    private float deltaY;
 
     public ListViewTouchHelper(DetailScrollView scrollView, DetailListView listView) {
         this.mScrollView = scrollView;
@@ -49,10 +50,10 @@ public class ListViewTouchHelper {
                 break;
             case MotionEvent.ACTION_MOVE:
                 float nowY = ev.getRawY();
-                if(mLastY == 0){
+                if (mLastY == 0) {
                     mLastY = nowY;
                 }
-                float deltaY = nowY - mLastY;
+                deltaY = nowY - mLastY;
                 int dy = mScrollView.adjustScrollY((int) -deltaY);
                 mLastY = nowY;
                 DetailScrollView.LogE("ListViewTouchHelper.onTouchEvent.ACTION_MOVE,.......dy=" + dy + "\n"
@@ -72,8 +73,13 @@ public class ListViewTouchHelper {
             case MotionEvent.ACTION_UP:
                 if (!canScrollVertically(DetailScrollView.DIRECT_TOP) && isDragged) {
                     mVelocityTracker.computeCurrentVelocity(1000, maxVelocity);
-                    final float curVelocity = mVelocityTracker.getYVelocity(0);
-                    DetailScrollView.LogE("ListViewTouchHelper.onTouchEvent.ACTION_UP......ScrollView.fling:" + (-curVelocity));
+                    float curVelocity = mVelocityTracker.getYVelocity(0);
+                    DetailScrollView.LogE("ListViewTouchHelper.onTouchEvent.ACTION_UP......curVelocity =" + curVelocity + ",deltaY=" + deltaY);
+                    if (curVelocity * deltaY > 0) {//deltaY>0，手指是向下滑动，对应的scrollerview应该向上滚，则curVelocity应该小于0。有时候会莫明出现curVelocity>0的情况，所以加上这个判断，保证两者正负必须相反
+                        DetailScrollView.LogE("ListViewTouchHelper.onTouchEvent.ACTION_UP....curVelocity * deltaY >0");
+                        curVelocity = -curVelocity;
+                    }
+                    DetailScrollView.LogE("ListViewTouchHelper.onTouchEvent.ACTION_UP......ScrollView.fling:" + curVelocity);
                     mScrollView.fling(-(int) curVelocity);
                 }
                 mLastY = 0;
@@ -104,5 +110,37 @@ public class ListViewTouchHelper {
             return;
         mVelocityTracker.recycle();
         mVelocityTracker = null;
+    }
+
+    /**
+     * ListView和RecyclerView的fling过渡到WebView
+     *
+     * @param isIdle 滑动是否暂停
+     */
+    public void onScrollStateChanged(boolean isIdle) {
+        boolean isCanScrollTop = canScrollVertically(DetailScrollView.DIRECT_TOP);
+        DetailScrollView.LogE("DetailRecyclerView.onScrollStateChanged....isCanScrollTop=" + isCanScrollTop + ",isIdle=" + isIdle + ",deltaY=" + deltaY);
+        if (!isCanScrollTop && isIdle && deltaY > 0) {
+            int velocity = getCurVelocity();
+            DetailScrollView.LogE("DetailRecyclerView.onScrollStateChanged....mScrollView.fling:" + (-velocity));
+            mScrollView.fling(-velocity);
+        }
+        if (isIdle) {
+            deltaY = 0;
+        }
+    }
+
+    /**
+     * 获取当前滑动速度
+     *
+     * @return 当前速度
+     */
+    private int getCurVelocity() {
+        if (mRecyclerView != null) {
+            return mRecyclerView.getCurrVelocity();
+        } else if (mListView != null) {
+            return mListView.getCurrVelocity();
+        }
+        return 0;
     }
 }

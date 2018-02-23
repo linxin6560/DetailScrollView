@@ -8,6 +8,7 @@ import android.view.MotionEvent;
 import android.view.ViewConfiguration;
 import android.widget.AbsListView;
 import android.widget.ListView;
+import android.widget.OverScroller;
 
 import com.levylin.detailscrollview.views.helper.ListViewTouchHelper;
 import com.levylin.detailscrollview.views.listener.OnScrollBarShowListener;
@@ -23,6 +24,7 @@ public class DetailListView extends ListView implements IDetailListView, AbsList
     private Method reportScrollStateChangeMethod;
     private Method startMethod;
     private Object mFlingRunnable;
+    private OverScroller mScroller;
     private ListViewTouchHelper mHelper;
     private OnScrollBarShowListener mScrollBarShowListener;
 
@@ -45,22 +47,25 @@ public class DetailListView extends ListView implements IDetailListView, AbsList
         setOnScrollListener(this);
         setVerticalScrollBarEnabled(false);
         setOverScrollMode(OVER_SCROLL_NEVER);
-        if (VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
-            setFriction(ViewConfiguration.getScrollFriction());
-            try {
-                Field field = AbsListView.class.getDeclaredField("mFlingRunnable");
-                field.setAccessible(true);
-                mFlingRunnable = field.get(this);
-                Class clazz = Class.forName("android.widget.AbsListView.FlingRunnable");
-                startMethod = clazz.getDeclaredMethod("start", Integer.TYPE);
-                startMethod.setAccessible(true);
-                reportScrollStateChangeMethod = AbsListView.class.getDeclaredMethod("reportScrollStateChange", Integer.TYPE);
-                reportScrollStateChangeMethod.setAccessible(true);
-            } catch (Throwable v0) {
-                mFlingRunnable = null;
-                startMethod = null;
-                reportScrollStateChangeMethod = null;
-            }
+        setFriction(ViewConfiguration.getScrollFriction());
+        try {
+            Field field = AbsListView.class.getDeclaredField("mFlingRunnable");
+            field.setAccessible(true);
+            mFlingRunnable = field.get(this);
+            Class<?> clazz = mFlingRunnable.getClass();
+            Field scrollerField = clazz.getDeclaredField("mScroller");
+            scrollerField.setAccessible(true);
+            mScroller = (OverScroller) scrollerField.get(mFlingRunnable);
+            startMethod = clazz.getDeclaredMethod("start", Integer.TYPE);
+            startMethod.setAccessible(true);
+            reportScrollStateChangeMethod = AbsListView.class.getDeclaredMethod("reportScrollStateChange", Integer.TYPE);
+            reportScrollStateChangeMethod.setAccessible(true);
+        } catch (Throwable t) {
+            t.printStackTrace();
+            mFlingRunnable = null;
+            startMethod = null;
+            reportScrollStateChangeMethod = null;
+            mScroller = null;
         }
     }
 
@@ -114,7 +119,7 @@ public class DetailListView extends ListView implements IDetailListView, AbsList
 
     @Override
     public void onScrollStateChanged(AbsListView view, int scrollState) {
-
+        mHelper.onScrollStateChanged(scrollState == SCROLL_STATE_IDLE);
     }
 
     @Override
@@ -122,5 +127,20 @@ public class DetailListView extends ListView implements IDetailListView, AbsList
         if (mScrollBarShowListener != null) {
             mScrollBarShowListener.onShow();
         }
+    }
+
+    /**
+     * 获取滑动速度
+     *
+     * @return
+     */
+    public int getCurrVelocity() {
+        int velocity = 0;
+        DetailScrollView.LogE("DetailListView.getCurrVelocity...mScroller=" + mScroller);
+        if (mScroller != null) {
+            velocity = (int) mScroller.getCurrVelocity();
+        }
+        DetailScrollView.LogE("DetailListView.getCurrVelocity...velocity=" + velocity);
+        return velocity;
     }
 }
